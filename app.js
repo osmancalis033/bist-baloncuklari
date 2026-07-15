@@ -137,6 +137,7 @@
   function compact(value) { return trCompact.format(value); }
   function formatPrice(value) { return `${trNumber.format(value)} ₺`; }
   function capAbs(value, max) { return Math.max(-max, Math.min(max, value)); }
+  function isMobileCanvas() { return state.width > 0 && state.width <= 700; }
   function formatPercent(value) { return `${value >= 0 ? '+' : ''}${trNumber.format(value)}%`; }
   function formatPctValue(value) { return `${trNumber.format(value)}%`; }
   function localSeed(text) {
@@ -629,27 +630,65 @@
     const min = Math.min(...values, 0);
     const max = Math.max(...values, 1);
     const old = new Map(state.nodes.map((node) => [node.stock.symbol, node]));
+    const mobile = isMobileCanvas();
+    const tablet = !mobile && state.width > 0 && state.width < 1050;
     state.nodes = state.filtered.map((stock, index) => {
       const oldNode = old.get(stock.symbol);
       const value = sizeMetricValue(stock);
       const normalized = (value - min) / Math.max(.0001, max - min);
-      const radius = 22 + normalized * 48;
+      const radius = mobile
+        ? 10 + normalized * 23
+        : tablet
+          ? 17 + normalized * 38
+          : 22 + normalized * 48;
       return {
         stock,
-        x: oldNode?.x ?? (state.width * (.18 + (index % 9) / 11) || 220),
-        y: oldNode?.y ?? (state.height * (.18 + Math.floor(index / 9) / 12) || 220),
+        x: oldNode?.x ?? (state.width * (.14 + (index % 10) / 13) || 220),
+        y: oldNode?.y ?? (state.height * (.12 + Math.floor(index / 10) / 14) || 220),
         vx: oldNode?.vx ?? 0,
         vy: oldNode?.vy ?? 0,
         tx: oldNode?.tx ?? 0,
         ty: oldNode?.ty ?? 0,
         r: radius,
+        isNew: !oldNode,
       };
     });
-    updateNodeTargets(preserve);
+    updateNodeTargets();
+    state.nodes.forEach((node, index) => {
+      if (!preserve || node.isNew) {
+        const rnd = localRandom(localSeed(`${node.stock.symbol}|initial-layout|${state.width}|${state.height}`));
+        node.x = clamp(node.tx + (rnd() - .5) * (mobile ? 5 : 10), node.r + 8, state.width - node.r - 8);
+        node.y = clamp(node.ty + (rnd() - .5) * (mobile ? 5 : 10), node.r + 8, state.height - node.r - 8);
+        node.vx = 0;
+        node.vy = 0;
+      }
+      delete node.isNew;
+    });
   }
 
   function updateNodeTargets() {
     if (!state.nodes.length) return;
+    const mobile = isMobileCanvas();
+    if (mobile) {
+      const ordered = state.clusterMode
+        ? [...state.nodes].sort((a, b) => a.stock.sector.localeCompare(b.stock.sector, 'tr') || b.r - a.r)
+        : [...state.nodes].sort((a, b) => b.r - a.r);
+      const paddingX = 22;
+      const paddingY = 30;
+      const columns = Math.max(7, Math.floor((state.width - paddingX * 2) / 36));
+      const rows = Math.max(1, Math.ceil(ordered.length / columns));
+      const gapX = (state.width - paddingX * 2) / Math.max(columns - 1, 1);
+      const gapY = (state.height - paddingY * 2) / Math.max(rows - 1, 1);
+      ordered.forEach((node, index) => {
+        const row = Math.floor(index / columns);
+        const col = index % columns;
+        const offset = row % 2 ? gapX * .45 : 0;
+        const rnd = localRandom(localSeed(`${node.stock.symbol}|mobile-grid`));
+        node.tx = clamp(paddingX + col * gapX + offset + (rnd() - .5) * 5, node.r + 5, state.width - node.r - 5);
+        node.ty = clamp(paddingY + row * gapY + (rnd() - .5) * 5, node.r + 5, state.height - node.r - 5);
+      });
+      return;
+    }
     if (!state.clusterMode) {
       const centerX = state.width / 2;
       const centerY = state.height / 2;
@@ -699,17 +738,20 @@
 
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
+    const previousWidth = state.width;
     state.width = rect.width;
     state.height = rect.height;
     canvas.width = rect.width * state.dpr;
     canvas.height = rect.height * state.dpr;
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    updateNodeTargets();
+    const crossedBreakpoint = (previousWidth <= 700) !== (state.width <= 700) || (previousWidth < 1050) !== (state.width < 1050);
+    if (state.filtered.length && (crossedBreakpoint || !state.nodes.length)) rebuildNodes(true);
+    else updateNodeTargets();
     if (state.selected) drawMiniChart(state.selected);
   }
 
   function drawClusterLabels() {
-    if (!state.clusterMode) return;
+    if (!state.clusterMode || isMobileCanvas()) return;
     const sectorMap = {};
     state.nodes.forEach((node) => {
       if (!sectorMap[node.stock.sector]) sectorMap[node.stock.sector] = [];
@@ -816,13 +858,17 @@
 
   function updatePhysics() {
     if (!state.nodes.length) return;
+    const mobile = isMobileCanvas();
+    const attraction = mobile ? 0.0018 : 0.0024;
+    const damping = mobile ? 0.58 : 0.64;
+    const maxSpeed = mobile ? 0.42 : 0.68;
     for (const node of state.nodes) {
-      const ax = (node.tx - node.x) * 0.0045;
-      const ay = (node.ty - node.y) * 0.0045;
-      node.vx = capAbs((node.vx + ax) * 0.76, 1.45);
-      node.vy = capAbs((node.vy + ay) * 0.76, 1.45);
-      if (Math.abs(node.tx - node.x) < 0.35 && Math.abs(node.vx) < 0.08) node.vx = 0;
-      if (Math.abs(node.ty - node.y) < 0.35 && Math.abs(node.vy) < 0.08) node.vy = 0;
+      const ax = (node.tx - node.x) * attraction;
+      const ay = (node.ty - node.y) * attraction;
+      node.vx = capAbs((node.vx + ax) * damping, maxSpeed);
+      node.vy = capAbs((node.vy + ay) * damping, maxSpeed);
+      if (Math.abs(node.tx - node.x) < 0.5 && Math.abs(node.vx) < 0.035) node.vx = 0;
+      if (Math.abs(node.ty - node.y) < 0.5 && Math.abs(node.vy) < 0.035) node.vy = 0;
       if (node !== state.dragging) {
         node.x += node.vx;
         node.y += node.vy;
@@ -835,19 +881,19 @@
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const dist = Math.hypot(dx, dy) || .001;
-        const minDist = a.r + b.r + 8;
+        const minDist = a.r + b.r + (mobile ? 3 : 7);
         if (dist < minDist) {
-          const overlap = (minDist - dist) * 0.24;
+          const overlap = (minDist - dist) * (mobile ? 0.10 : 0.14);
           const nx = dx / dist;
           const ny = dy / dist;
-          if (a !== state.dragging) { a.x -= nx * overlap; a.y -= ny * overlap; a.vx *= 0.72; a.vy *= 0.72; }
-          if (b !== state.dragging) { b.x += nx * overlap; b.y += ny * overlap; b.vx *= 0.72; b.vy *= 0.72; }
+          if (a !== state.dragging) { a.x -= nx * overlap; a.y -= ny * overlap; a.vx *= 0.45; a.vy *= 0.45; }
+          if (b !== state.dragging) { b.x += nx * overlap; b.y += ny * overlap; b.vx *= 0.45; b.vy *= 0.45; }
         }
       }
     }
     state.nodes.forEach((node) => {
-      node.x = clamp(node.x, node.r + 10, state.width - node.r - 10);
-      node.y = clamp(node.y, node.r + 10, state.height - node.r - 10);
+      node.x = clamp(node.x, node.r + 5, state.width - node.r - 5);
+      node.y = clamp(node.y, node.r + 5, state.height - node.r - 5);
     });
   }
 
@@ -872,7 +918,7 @@
     return null;
   }
   function showTooltip(node, x, y) {
-    if (!node) { tooltip.hidden = true; return; }
+    if (isMobileCanvas() || !node) { tooltip.hidden = true; return; }
     const stock = node.stock;
     const klass = changeFor(stock) >= 0 ? 'gain' : 'loss';
     tooltip.innerHTML = `<strong>${stock.symbol} · ${stock.name}</strong><span>${stock.sector}</span><b class="${klass}">${formatPrice(priceFor(stock))} · ${formatPercent(changeFor(stock))}</b><span>${bubbleInfoText(stock)}</span>`;
@@ -1596,12 +1642,14 @@
     activateDrawerTab('overview');
     $('#detailDrawer').classList.add('open');
     $('#detailDrawer').setAttribute('aria-hidden', 'false');
+    document.body.classList.add('drawer-open');
     requestAnimationFrame(() => drawMiniChart(stock));
   }
 
   function closeDrawer() {
     $('#detailDrawer').classList.remove('open');
     $('#detailDrawer').setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('drawer-open');
   }
 
   function drawMiniChart(stock) {
@@ -1810,6 +1858,7 @@
     canvas.classList.remove('dragging');
     if (moved < 8) openDrawer(dragged.stock);
   });
+  canvas.addEventListener('pointercancel', () => { state.dragging = null; canvas.classList.remove('dragging'); });
   canvas.addEventListener('pointerleave', () => { if (!state.dragging) { state.hovered = null; tooltip.hidden = true; } });
   canvas.addEventListener('dblclick', () => rebuildNodes(false));
 
@@ -1916,7 +1965,11 @@
       $('#searchInput').focus();
     }
   });
-  window.addEventListener('resize', () => { resizeCanvas(); });
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resizeCanvas, 90);
+  });
   document.addEventListener('fullscreenchange', resizeCanvas);
 
   try { if (localStorage.getItem(STORAGE.theme) === 'light') document.documentElement.classList.add('light'); } catch {}

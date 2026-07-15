@@ -20,3 +20,13 @@ Bu paket yatırımcı ve ürün sunumu amacıyla tarayıcıda üretilen sunum ve
 ## GitHub Pages
 
 Repository ayarlarında **Settings → Pages → Deploy from a branch → main / root** seçildikten sonra site yayımlanır.
+
+## Mobil sürüm güncellemesi
+
+- Üst menü, dönem butonları ve sekmeler mobilde yatay kaydırılabilir hale getirildi.
+- Özet kartları mobilde tek satırlık kaydırılabilir kart yapısına dönüştürüldü.
+- Filtreler iki kolonlu kompakt mobil düzene uyarlandı.
+- Hisse detay ekranı mobilde sağ panel yerine alttan açılan tam boy çekmece olarak çalışır.
+- Grafik, kurum önerileri ve analiz kartları küçük ekranlara göre yeniden düzenlendi.
+- Baloncuk boyutları mobil ekrana göre küçülür ve daha dengeli bir ızgaraya yayılır.
+- Baloncukların hareket hızı ve çarpışma tepkisi belirgin biçimde yavaşlatıldı.

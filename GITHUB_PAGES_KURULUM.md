@@ -19,3 +19,7 @@
 `https://KULLANICI-ADINIZ.github.io/bist-baloncuklari/`
 
 Bilgisayarınızın veya lokal sunucunun açık kalması gerekmez.
+
+## Mevcut siteyi mobil sürüme güncelleme
+
+Repository ana ekranında **Add file → Upload files** yolunu açın. Bu paketteki güncel dosyaları mevcut dosyaların üzerine yükleyin ve **Commit changes** düğmesine basın. Özellikle `app.js` ve `styles.css` dosyalarının değiştiğini kontrol edin. GitHub Pages genellikle birkaç dakika içinde yeni sürümü yayımlar.
