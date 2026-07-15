@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07100d" />
+  <title>BIST Baloncukları Pro · Yatırımcı Sunumu</title>
+  <meta name="description" content="BIST hisseleri için baloncuk haritası, portföy, tarayıcı ve karşılaştırma deneyimi." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <a class="brand" href="#" aria-label="BIST Baloncukları ana sayfa">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-copy">
+            <strong>BIST</strong>
+            <em>BALONCUKLARI PRO</em>
+          </span>
+        </a>
+        <nav class="screen-nav" aria-label="Ana ekranlar">
+          <button class="screen-btn active" data-screen="market">Piyasa</button>
+          <button class="screen-btn" data-screen="scanner">Tarayıcı</button>
+          <button class="screen-btn" data-screen="portfolio">Portföy</button>
+          <button class="screen-btn" data-screen="compare">Karşılaştır</button>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <div class="market-overview-compact">
+          <div class="mini-stat">
+            <span>Seçili Endeks</span>
+            <strong id="selectedIndex">BIST 100</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Ortalama Değişim</span>
+            <strong id="marketChange">—</strong>
+          </div>
+          <div class="mini-stat hide-mobile">
+            <span>Yükselen / Düşen</span>
+            <strong><b id="advances">—</b> / <i id="declines">—</i></strong>
+          </div>
+        </div>
+        <span id="marketStatus" class="status-chip"><i></i><span>Piyasa durumu</span></span>
+        <button id="refreshBtn" class="icon-button" type="button" title="Veriyi yenile" aria-label="Veriyi yenile">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
+        </button>
+        <button id="themeBtn" class="icon-button" type="button" title="Temayı değiştir" aria-label="Temayı değiştir">
+          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.2 8.2 0 0 1 8.8 4 8.2 8.2 0 1 0 20 15.2Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="overview-strip">
+      <div id="overviewCards" class="overview-cards"></div>
+    </section>
+
+    <section class="controls" aria-label="Filtreler ve görünüm ayarları">
+      <div class="controls-row">
+        <div class="control-group periods" role="group" aria-label="Dönem">
+          <button data-period="1s" type="button">1S</button>
+          <button class="active" data-period="1g" type="button">1G</button>
+          <button data-period="1h" type="button">1H</button>
+          <button data-period="1a" type="button">1A</button>
+          <button data-period="3a" type="button">3A</button>
+          <button data-period="1y" type="button">1Y</button>
+        </div>
+
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="searchInput" type="search" placeholder="Hisse ara: THYAO, holding, enerji..." autocomplete="off" />
+          <kbd>/</kbd>
+        </label>
+
+        <label class="select-wrap compact">
+          <span>Endeks</span>
+          <select id="indexSelect">
+            <option value="30">BIST 30</option>
+            <option value="100" selected>BIST 100</option>
+          </select>
+        </label>
+
+        <label class="select-wrap compact">
+          <span>Sektör</span>
+          <select id="sectorSelect"><option value="all">Tüm sektörler</option></select>
+        </label>
+
+        <label class="select-wrap compact">
+          <span>Hızlı filtre</span>
+          <select id="quickFilter">
+            <option value="all">Tümü</option>
+            <option value="gainers">En çok yükselenler</option>
+            <option value="losers">En çok düşenler</option>
+            <option value="highVolume">Yüksek hacim</option>
+            <option value="volumeSpike">Hacim patlaması</option>
+            <option value="newHigh">Yeni zirve</option>
+            <option value="newLow">Yeni dip</option>
+            <option value="tavan">Tavan</option>
+            <option value="taban">Taban</option>
+            <option value="gapUp">Pozitif açılış</option>
+            <option value="gapDown">Negatif açılış</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="controls-row secondary-row">
+        <label class="select-wrap compact">
+          <span>Baloncuk boyutu</span>
+          <select id="sizeMetric">
+            <option value="marketCap">Piyasa değeri</option>
+            <option value="volume">İşlem hacmi</option>
+            <option value="change">Değişim şiddeti</option>
+            <option value="relVolume">Göreceli hacim</option>
+            <option value="volatility">Volatilite</option>
+            <option value="targetPotential">Hedef potansiyeli</option>
+          </select>
+        </label>
+
+        <label class="select-wrap compact">
+          <span>Baloncuk alt bilgisi</span>
+          <select id="bubbleInfo">
+            <option value="price">Fiyat</option>
+            <option value="change">Değişim</option>
+            <option value="volume">Hacim</option>
+            <option value="relVolume">Göreceli hacim</option>
+            <option value="volatility">Volatilite</option>
+            <option value="relative">BIST'e göre relatif</option>
+            <option value="targetPotential">Hedef potansiyeli</option>
+          </select>
+        </label>
+
+        <button id="clusterToggle" class="toggle-pill active" type="button">Sektörel Kümelenme: Açık</button>
+
+        <div class="view-toggle" role="group" aria-label="Görünüm">
+          <button id="bubbleViewBtn" class="active" type="button" title="Baloncuk görünümü" aria-label="Baloncuk görünümü">
+            <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><circle cx="16.5" cy="15" r="5"/><circle cx="5" cy="18" r="2"/></svg>
+          </button>
+          <button id="listViewBtn" type="button" title="Liste görünümü" aria-label="Liste görünümü">
+            <svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="timeline-wrap">
+          <button id="timelinePlayBtn" class="icon-button small" type="button" title="Günü oynat" aria-label="Günü oynat">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <input id="timelineRange" type="range" min="0" max="7" step="1" value="7" />
+          <div class="timeline-meta"><strong id="timelineLabel">Kapanış</strong><span id="timelineClock">18:00</span></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section id="screen-market" class="screen active">
+        <div class="market-layout">
+          <div class="market-main">
+            <section id="bubblePanel" class="bubble-panel">
+              <canvas id="bubbleCanvas" aria-label="BIST hisse baloncuk haritası"></canvas>
+              <div id="emptyState" class="empty-state" hidden>
+                <strong>Sonuç bulunamadı</strong>
+                <span>Arama veya sektör filtresini değiştirin.</span>
+              </div>
+              <div id="loadingState" class="loading-state">
+                <div class="loader-orbit"><i></i><i></i><i></i></div>
+                <strong>Piyasa verileri hazırlanıyor</strong>
+                <span>Hisseler baloncuk haritasına yerleştiriliyor…</span>
+              </div>
+              <div class="legend-card">
+                <div><span class="legend-dot gain"></span>Yükseliş</div>
+                <div><span class="legend-dot neutral"></span>Yatay</div>
+                <div><span class="legend-dot loss"></span>Düşüş</div>
+                <small>Baloncukları sürükleyin, detay için tıklayın, favori/karşılaştırma için kartları kullanın.</small>
+              </div>
+              <div class="canvas-actions">
+                <button id="resetLayoutBtn" type="button" title="Yerleşimi sıfırla">
+                  <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>
+                </button>
+                <button id="fullscreenBtn" type="button" title="Tam ekran">
+                  <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+                </button>
+              </div>
+              <div id="tooltip" class="tooltip" hidden></div>
+            </section>
+
+            <section id="listPanel" class="list-panel" hidden>
+              <div class="table-headline">
+                <div>
+                  <strong>Hisse Listesi</strong>
+                  <span id="resultCount">— hisse</span>
+                </div>
+                <button id="sortChangeBtn" type="button">Değişime göre sırala <span>↕</span></button>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Hisse</th>
+                      <th>Fiyat</th>
+                      <th>Değişim</th>
+                      <th>Hacim</th>
+                      <th>RVol</th>
+                      <th>F/K</th>
+                      <th>Sektör</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside class="right-rail">
+            <section class="rail-card">
+              <div class="rail-card-head">
+                <strong>Sektör Gücü</strong>
+                <span id="sectorCountBadge">—</span>
+              </div>
+              <div id="sectorHeatList" class="sector-heat-list"></div>
+            </section>
+
+            <section class="rail-card">
+              <div class="rail-card-head">
+                <strong>Favoriler & İzleme Listesi</strong>
+                <span id="favoriteCountBadge">0</span>
+              </div>
+              <div id="favoritesList" class="watch-list"></div>
+            </section>
+
+            <section class="rail-card">
+              <div class="rail-card-head">
+                <strong>Alarmlar</strong>
+                <span id="alertCountBadge">0</span>
+              </div>
+              <div id="alertsList" class="alerts-list"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-scanner" class="screen">
+        <div class="screen-grid single">
+          <section class="content-card">
+            <div class="section-head">
+              <div>
+                <strong>Hazır Tarayıcılar</strong>
+                <span>Temel, teknik ve piyasa taramalarını tek tıkla çalıştırın.</span>
+              </div>
+              <div id="scanResultMeta" class="meta-chip">—</div>
+            </div>
+            <div id="scannerGroups" class="scanner-groups"></div>
+            <div class="table-scroll spaced-top">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hisse</th>
+                    <th>Fiyat</th>
+                    <th>Değişim</th>
+                    <th>F/K</th>
+                    <th>PD/DD</th>
+                    <th>RSI</th>
+                    <th>RVol</th>
+                    <th>Gerekçe</th>
+                  </tr>
+                </thead>
+                <tbody id="scannerTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-portfolio" class="screen">
+        <div class="screen-grid">
+          <section class="content-card span-2">
+            <div class="section-head">
+              <div>
+                <strong>Portföy Özeti</strong>
+                <span>Demo portföyünüz ve BIST 100'e göre göreceli performans.</span>
+              </div>
+              <div id="portfolioRelative" class="meta-chip">—</div>
+            </div>
+            <div id="portfolioSummaryCards" class="summary-cards-grid"></div>
+            <div class="table-scroll spaced-top">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hisse</th>
+                    <th>Lot</th>
+                    <th>Maliyet</th>
+                    <th>Güncel</th>
+                    <th>Piyasa Değeri</th>
+                    <th>Günlük K/Z</th>
+                    <th>Toplam K/Z</th>
+                    <th>Ağırlık</th>
+                  </tr>
+                </thead>
+                <tbody id="portfolioTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="content-card">
+            <div class="section-head">
+              <div>
+                <strong>Sektörel Dağılım</strong>
+                <span>Portföyünüz hangi sektörlerde yoğunlaşıyor?</span>
+              </div>
+            </div>
+            <div id="portfolioSectorList" class="allocation-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-compare" class="screen">
+        <div class="screen-grid">
+          <section class="content-card span-2">
+            <div class="section-head">
+              <div>
+                <strong>Hisse Karşılaştırma</strong>
+                <span>Baloncuk veya detay ekranından eklediğiniz hisseleri burada kıyaslayın.</span>
+              </div>
+              <div id="compareMeta" class="meta-chip">En fazla 3 hisse</div>
+            </div>
+            <div id="compareSelection" class="compare-selection"></div>
+            <div class="table-scroll spaced-top">
+              <table>
+                <thead><tr id="compareHeadRow"></tr></thead>
+                <tbody id="compareTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="content-card">
+            <div class="section-head">
+              <div>
+                <strong>Performans Özeti</strong>
+                <span>Gün, hafta ve ay bazında göreceli görünüm.</span>
+              </div>
+            </div>
+            <div id="compareBars" class="compare-bars"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footerbar">
+      <div class="source-info">
+        <span id="sourceDot" class="source-dot"></span>
+        <strong id="sourceLabel">Veri kaynağı hazırlanıyor</strong>
+        <span id="updatedAt">—</span>
+      </div>
+      <div class="footer-note">Gösterilen bilgiler demo / gecikmeli olabilir; yatırım tavsiyesi değildir.</div>
+    </footer>
+  </div>
+
+  <aside id="detailDrawer" class="detail-drawer" aria-hidden="true">
+    <div class="drawer-backdrop" data-close-drawer></div>
+    <article class="drawer-sheet">
+      <button class="drawer-close" type="button" data-close-drawer aria-label="Detayı kapat">×</button>
+      <div class="drawer-hero">
+        <div id="drawerLogo" class="stock-logo">TH</div>
+        <div>
+          <div class="ticker-line"><strong id="drawerSymbol">THYAO</strong><span>BIST</span></div>
+          <h2 id="drawerName">Türk Hava Yolları</h2>
+          <p id="drawerSector">Ulaştırma</p>
+        </div>
+      </div>
+      <div class="drawer-actions-row">
+        <button id="drawerFavoriteBtn" class="outline-btn" type="button">☆ Favori</button>
+        <button id="drawerCompareBtn" class="outline-btn" type="button">⇄ Karşılaştır</button>
+        <button id="drawerPortfolioBtn" class="outline-btn" type="button">＋ Portföy</button>
+        <button id="drawerAlertBtn" class="outline-btn" type="button">⏰ Alarm</button>
+      </div>
+      <div class="drawer-price-row">
+        <div><span>Son fiyat</span><strong id="drawerPrice">—</strong></div>
+        <div id="drawerChange" class="change-pill">—</div>
+      </div>
+      <div class="mini-chart-wrap">
+        <div class="chart-toolbar">
+          <div class="chart-title-group">
+            <strong>Fiyat ve Hacim</strong>
+            <span id="chartPeriodLabel">1 Ay</span>
+          </div>
+          <div class="chart-periods" role="group" aria-label="Grafik dönemi">
+            <button type="button" data-chart-period="1g">1G</button>
+            <button type="button" data-chart-period="1h">1H</button>
+            <button class="active" type="button" data-chart-period="1a">1A</button>
+            <button type="button" data-chart-period="3a">3A</button>
+            <button type="button" data-chart-period="1y">1Y</button>
+          </div>
+        </div>
+        <canvas id="miniChart"></canvas>
+        <canvas id="volumeChart"></canvas>
+        <div class="chart-legend">
+          <span><i class="legend-line price"></i>Fiyat</span>
+          <span><i class="legend-line average"></i>Hareketli ortalama</span>
+          <span><i class="legend-box volume"></i>Hacim</span>
+        </div>
+      </div>
+      <div class="drawer-tabs" role="tablist" aria-label="Hisse detay sekmeleri">
+        <button class="drawer-tab active" type="button" data-tab="overview">Genel Bakış</button>
+        <button class="drawer-tab" type="button" data-tab="fundamental">Temel Analiz</button>
+        <button class="drawer-tab" type="button" data-tab="technical">Teknik Analiz</button>
+        <button class="drawer-tab" type="button" data-tab="pivots">Pivotlar</button>
+        <button class="drawer-tab" type="button" data-tab="news">Haber Akışı</button>
+        <button class="drawer-tab" type="button" data-tab="targets">Kurum Önerileri</button>
+        <button class="drawer-tab" type="button" data-tab="ai">Yapay Zekâ Özeti</button>
+      </div>
+      <div class="drawer-panels">
+        <section class="drawer-panel active" data-panel="overview">
+          <div id="drawerOverviewGrid" class="detail-grid"></div>
+          <div class="range-card">
+            <div class="range-head">
+              <strong>52 Haftalık Aralık</strong>
+              <span id="drawerYearRangeText">—</span>
+            </div>
+            <div class="range-bar"><i id="drawerYearRangeBar"></i></div>
+          </div>
+          <div id="drawerMetaInfo" class="data-meta-card"></div>
+        </section>
+        <section class="drawer-panel" data-panel="fundamental">
+          <div class="analysis-summary" id="fundamentalSummary"></div>
+          <div id="fundamentalGrid" class="detail-grid"></div>
+        </section>
+        <section class="drawer-panel" data-panel="technical">
+          <div id="technicalSummary" class="analysis-summary"></div>
+          <div id="technicalGrid" class="detail-grid"></div>
+        </section>
+        <section class="drawer-panel" data-panel="pivots">
+          <div class="analysis-summary" id="pivotSummary"></div>
+          <div id="pivotGrid" class="detail-grid"></div>
+        </section>
+        <section class="drawer-panel" data-panel="news">
+          <div id="newsList" class="news-list"></div>
+        </section>
+        <section class="drawer-panel" data-panel="targets">
+          <div id="targetSourceNote" class="target-source-note">Kurum önerileri hazırlanıyor…</div>
+          <div id="targetConsensus" class="target-consensus"></div>
+          <div id="targetInsights" class="target-insights"></div>
+          <div id="targetRecommendations" class="target-recommendations"></div>
+        </section>
+        <section class="drawer-panel" data-panel="ai">
+          <div id="aiSummaryCard" class="ai-summary-card"></div>
+        </section>
+      </div>
+      <div class="drawer-disclaimer">Veriler gecikmeli veya demo olabilir. Canlı işlem kararlarında tek kaynak olarak kullanılmamalıdır.</div>
+    </article>
+  </aside>
+
+  <script>window.BIST_STATIC_MODE = true;</script>
+  <script src="demo-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
