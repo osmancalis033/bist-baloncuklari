@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#07100d" />
-  <title>BIST Baloncukları Pro · Yatırımcı Sunumu</title>
+  <title>BIST Baloncukları · Lite / Pro Demo</title>
   <meta name="description" content="BIST hisseleri için baloncuk haritası, portföy, tarayıcı ve karşılaştırma deneyimi." />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260809-ux-v8" />
 </head>
 <body>
   <div class="app-shell">
@@ -16,9 +16,14 @@
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="brand-copy">
             <strong>BIST</strong>
-            <em>BALONCUKLARI PRO</em>
+            <em id="brandModeLabel">BALONCUKLARI LITE</em>
           </span>
         </a>
+        <div id="productExperienceSwitch" class="experience-switch" role="group" aria-label="Ürün deneyimi seçimi">
+          <span class="experience-label">Deneyim</span>
+          <button id="liteModeBtn" class="active" type="button" data-product-mode="lite" aria-pressed="true" onclick="window.BIST_setProductMode && window.BIST_setProductMode('lite', true)"><b>Lite</b><small>Sade</small></button>
+          <button id="proModeBtn" type="button" data-product-mode="pro" aria-pressed="false" onclick="window.BIST_setProductMode && window.BIST_setProductMode('pro', true)"><b>Pro</b><small>Gelişmiş</small></button>
+        </div>
         <nav class="screen-nav" aria-label="Ana ekranlar">
           <button class="screen-btn active" data-screen="market">Piyasa</button>
           <button class="screen-btn" data-screen="scanner">Tarayıcı</button>
@@ -42,12 +47,14 @@
           </div>
         </div>
         <span id="marketStatus" class="status-chip"><i></i><span>Piyasa durumu</span></span>
-        <button id="refreshBtn" class="icon-button" type="button" title="Veriyi yenile" aria-label="Veriyi yenile">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
-        </button>
-        <button id="themeBtn" class="icon-button" type="button" title="Temayı değiştir" aria-label="Temayı değiştir">
-          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.2 8.2 0 0 1 8.8 4 8.2 8.2 0 1 0 20 15.2Z"/></svg>
-        </button>
+        <div class="topbar-actions" aria-label="Görünüm ve uygulama seçenekleri">
+          <button id="refreshBtn" class="icon-button" type="button" title="Veriyi yenile" aria-label="Veriyi yenile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
+          </button>
+          <button id="themeBtn" class="icon-button" type="button" title="Temayı değiştir" aria-label="Temayı değiştir">
+            <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.2 8.2 0 0 1 8.8 4 8.2 8.2 0 1 0 20 15.2Z"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -55,15 +62,25 @@
       <div id="overviewCards" class="overview-cards"></div>
     </section>
 
+    <section id="marketStory" class="market-story" aria-label="Piyasa özeti">
+      <div class="market-story-icon" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="market-story-copy">
+        <div class="market-story-head"><strong>Bugün Piyasada Ne Oluyor?</strong><span id="marketStoryBadge">Piyasa özeti</span></div>
+        <p id="marketStoryText">Piyasa görünümü hazırlanıyor…</p>
+        <div id="marketStoryChips" class="market-story-chips"></div>
+      </div>
+    </section>
+
     <section class="controls" aria-label="Filtreler ve görünüm ayarları">
       <div class="controls-row">
         <div class="control-group periods" role="group" aria-label="Dönem">
-          <button data-period="1s" type="button">1S</button>
+          <button class="pro-period" data-period="15dk" type="button">15Dk</button>
+          <button class="pro-period" data-period="1s" type="button">1S</button>
           <button class="active" data-period="1g" type="button">1G</button>
           <button data-period="1h" type="button">1H</button>
           <button data-period="1a" type="button">1A</button>
-          <button data-period="3a" type="button">3A</button>
-          <button data-period="1y" type="button">1Y</button>
+          <button class="pro-period" data-period="3a" type="button">3A</button>
+          <button class="pro-period" data-period="1y" type="button">1Y</button>
         </div>
 
         <label class="search-box">
@@ -366,6 +383,7 @@
       </div>
       <div class="drawer-actions-row">
         <button id="drawerFavoriteBtn" class="outline-btn" type="button">☆ Favori</button>
+        <button id="drawerShareBtn" class="outline-btn share-btn" type="button">↗ Paylaş</button>
         <button id="drawerCompareBtn" class="outline-btn" type="button">⇄ Karşılaştır</button>
         <button id="drawerPortfolioBtn" class="outline-btn" type="button">＋ Portföy</button>
         <button id="drawerAlertBtn" class="outline-btn" type="button">⏰ Alarm</button>
@@ -381,6 +399,7 @@
             <span id="chartPeriodLabel">1 Ay</span>
           </div>
           <div class="chart-periods" role="group" aria-label="Grafik dönemi">
+            <button type="button" data-chart-period="15dk">15Dk</button>
             <button type="button" data-chart-period="1g">1G</button>
             <button type="button" data-chart-period="1h">1H</button>
             <button class="active" type="button" data-chart-period="1a">1A</button>
@@ -396,6 +415,23 @@
           <span><i class="legend-box volume"></i>Hacim</span>
         </div>
       </div>
+      <section id="liteDrawerPanel" class="lite-drawer-panel" aria-label="Lite hisse özeti">
+        <div class="lite-highlight-grid">
+          <article><span>Günlük Aralık</span><strong id="liteDayRange">—</strong><small id="liteDayRangeNote">—</small></article>
+          <article><span>Kurum Ortalama Hedefi</span><strong id="liteTargetPrice">—</strong><small id="liteTargetPotential">—</small></article>
+          <article><span>Fon Sahipliği</span><strong id="liteFundCount">—</strong><small id="liteTopFund">—</small></article>
+          <article><span>52 Haftalık Konum</span><strong id="liteYearPosition">—</strong><small id="liteYearRange">—</small></article>
+        </div>
+        <div class="lite-section-card">
+          <div class="lite-section-head"><strong>Öne Çıkan Fonlar</strong><span>İlk 3</span></div>
+          <div id="liteFundList" class="lite-fund-list"></div>
+        </div>
+        <div class="lite-section-card">
+          <div class="lite-section-head"><strong>Öne Çıkan Gelişmeler</strong><span>Özet</span></div>
+          <div id="liteNewsList" class="lite-news-list"></div>
+        </div>
+        <button id="liteGoProBtn" class="lite-go-pro" type="button"><span>Detaylı analize geç</span><strong>PRO →</strong></button>
+      </section>
       <div class="drawer-tabs" role="tablist" aria-label="Hisse detay sekmeleri">
         <button class="drawer-tab active" type="button" data-tab="overview">Genel Bakış</button>
         <button class="drawer-tab" type="button" data-tab="fundamental">Temel Analiz</button>
@@ -403,6 +439,7 @@
         <button class="drawer-tab" type="button" data-tab="pivots">Pivotlar</button>
         <button class="drawer-tab" type="button" data-tab="news">Haber Akışı</button>
         <button class="drawer-tab" type="button" data-tab="targets">Kurum Önerileri</button>
+        <button class="drawer-tab" type="button" data-tab="funds">Fonlarda</button>
         <button class="drawer-tab" type="button" data-tab="ai">Yapay Zekâ Özeti</button>
       </div>
       <div class="drawer-panels">
@@ -438,6 +475,11 @@
           <div id="targetInsights" class="target-insights"></div>
           <div id="targetRecommendations" class="target-recommendations"></div>
         </section>
+        <section class="drawer-panel" data-panel="funds">
+          <div id="fundSourceNote" class="fund-source-note"></div>
+          <div id="fundSummary" class="fund-summary"></div>
+          <div id="fundHoldings" class="fund-holdings"></div>
+        </section>
         <section class="drawer-panel" data-panel="ai">
           <div id="aiSummaryCard" class="ai-summary-card"></div>
         </section>
@@ -446,8 +488,28 @@
     </article>
   </aside>
 
-  <script>window.BIST_STATIC_MODE = true;</script>
-  <script src="demo-data.js"></script>
-  <script src="app.js"></script>
+  <div id="quickActionMenu" class="quick-action-menu" hidden role="menu" aria-label="Hızlı hisse işlemleri">
+    <div class="quick-action-head">
+      <div id="quickActionLogo" class="quick-action-logo">TH</div>
+      <div><strong id="quickActionSymbol">THYAO</strong><span id="quickActionName">Türk Hava Yolları</span></div>
+      <button id="quickActionClose" type="button" aria-label="Menüyü kapat">×</button>
+    </div>
+    <div class="quick-action-price"><strong id="quickActionPrice">—</strong><span id="quickActionChange">—</span></div>
+    <div class="quick-action-grid">
+      <button type="button" data-quick-action="detail"><b>◎</b><span>Detayı Aç</span></button>
+      <button type="button" data-quick-action="favorite"><b>★</b><span>Favori</span></button>
+      <button type="button" data-quick-action="compare"><b>⇄</b><span>Karşılaştır</span></button>
+      <button type="button" data-quick-action="alert"><b>⏰</b><span>Alarm</span></button>
+      <button type="button" data-quick-action="share" class="quick-share"><b>↗</b><span>Kartı Paylaş</span></button>
+      <button type="button" data-quick-action="tradingview"><b>TV</b><span>TradingView</span></button>
+    </div>
+    <small>Masaüstünde sağ tık · Mobilde uzun bas</small>
+  </div>
+
+  <div id="modeToast" class="mode-toast" hidden></div>
+
+  <script>window.BIST_STATIC_MODE = true; window.BIST_MARKET_STATIC_MODE = true;</script>
+  <script src="demo-data.js?v=20260809-litepro-v3"></script>
+  <script src="app.js?v=20260809-ux-v8"></script>
 </body>
 </html>

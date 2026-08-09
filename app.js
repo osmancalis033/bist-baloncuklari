@@ -8,6 +8,7 @@
     alerts: 'bist-pro-alerts',
     portfolio: 'bist-pro-portfolio',
     theme: 'bist-theme',
+    productMode: 'bist-product-mode',
   };
 
   const TIMELINE_STEPS = [
@@ -28,6 +29,21 @@
     { symbol: 'AKBNK', qty: 450, cost: 61.5 },
     { symbol: 'BIMAS', qty: 48, cost: 495.0 },
     { symbol: 'TCELL', qty: 130, cost: 96.4 },
+  ];
+
+  const FUND_UNIVERSE = [
+    { code: 'IHA', name: 'Allbatross Portföy İkinci Hisse Senedi Fonu', founder: 'Allbatross Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'HVZ', name: 'Allbatross Portföy Birinci Hisse Senedi Fonu', founder: 'Allbatross Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'DAH', name: 'Deniz Portföy Hisse Senedi Fonu', founder: 'Deniz Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'HVI', name: 'Deniz Portföy Holdingler ve İştirakler Fonu', founder: 'Deniz Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'DXP', name: 'Deniz Portföy İhracatçı Şirketler Fonu', founder: 'Deniz Portföy', type: 'Sektörel' },
+    { code: 'GHS', name: 'Garanti Portföy Hisse Senedi Fonu', founder: 'Garanti Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'HIH', name: 'Garanti Portföy Holdingler ve İştirakleri Fonu', founder: 'Garanti Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'IMB', name: 'İstanbul Portföy Algoritmik Model Hisse Senedi Fonu', founder: 'İstanbul Portföy', type: 'Algoritmik' },
+    { code: 'ACC', name: 'İstanbul Portföy Dördüncü Hisse Senedi Fonu', founder: 'İstanbul Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'HOI', name: 'İstanbul Portföy Holdingler ve İştirakleri Fonu', founder: 'İstanbul Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'PHE', name: 'Pusula Portföy Hisse Senedi Fonu', founder: 'Pusula Portföy', type: 'Hisse Senedi Yoğun' },
+    { code: 'APMDL', name: 'Ak Portföy BIST 100 Endeksi Model Portföy BYF', founder: 'Ak Portföy', type: 'Borsa Yatırım Fonu' },
   ];
 
   const SCAN_GROUPS = [
@@ -110,12 +126,14 @@
     timelineIndex: 7,
     playing: false,
     playTimer: 0,
-    sourceLabel: 'Demo veri',
+    sourceLabel: 'TradingView gecikmeli veri hazırlanıyor',
     updatedAt: new Date().toISOString(),
-    sourceMode: 'demo',
+    sourceMode: 'warming',
     marketSummary: { marketChange: 0 },
     drawerChartPeriod: '1a',
     targetCache: new Map(),
+    quickActionStock: null,
+    productMode: (() => { try { return localStorage.getItem(STORAGE.productMode) || 'lite'; } catch { return 'lite'; } })(),
   };
 
   const canvas = $('#bubbleCanvas');
@@ -140,6 +158,51 @@
   function isMobileCanvas() { return state.width > 0 && state.width <= 700; }
   function formatPercent(value) { return `${value >= 0 ? '+' : ''}${trNumber.format(value)}%`; }
   function formatPctValue(value) { return `${trNumber.format(value)}%`; }
+  function showModeToast(message) {
+    const toast = $('#modeToast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.hidden = false;
+    toast.classList.add('show');
+    clearTimeout(showModeToast.timer);
+    showModeToast.timer = setTimeout(() => { toast.classList.remove('show'); toast.hidden = true; }, 1800);
+  }
+
+  function applyProductMode(mode, notify = false) {
+    state.productMode = mode === 'pro' ? 'pro' : 'lite';
+    try { localStorage.setItem(STORAGE.productMode, state.productMode); } catch {}
+    document.body.classList.toggle('mode-lite', state.productMode === 'lite');
+    document.body.classList.toggle('mode-pro', state.productMode === 'pro');
+    const liteButton = $('#liteModeBtn');
+    const proButton = $('#proModeBtn');
+    liteButton?.classList.toggle('active', state.productMode === 'lite');
+    proButton?.classList.toggle('active', state.productMode === 'pro');
+    liteButton?.setAttribute('aria-pressed', String(state.productMode === 'lite'));
+    proButton?.setAttribute('aria-pressed', String(state.productMode === 'pro'));
+    document.documentElement.dataset.productMode = state.productMode;
+    const brandLabel = $('#brandModeLabel');
+    if (brandLabel) brandLabel.textContent = `BALONCUKLARI ${state.productMode.toUpperCase()}`;
+    if (state.productMode === 'lite') {
+      if (state.activeScreen !== 'market') switchScreen('market');
+      state.sizeMetric = 'marketCap';
+      state.bubbleInfo = 'price';
+      $('#sizeMetric').value = 'marketCap';
+      $('#bubbleInfo').value = 'price';
+    }
+    if (state.rawStocks.length) {
+      applyFilters(true);
+      requestAnimationFrame(resizeCanvas);
+    }
+    if (state.selected) {
+      renderDrawer(state.selected);
+      if (state.productMode === 'pro') activateDrawerTab('overview');
+    }
+    if (notify) showModeToast(state.productMode === 'lite' ? 'Lite görünüm · sade piyasa keşfi' : 'Pro görünüm · gelişmiş analiz araçları aktif');
+  }
+
+  // Public setter: inline buttons still work even if a later UI listener fails.
+  window.BIST_setProductMode = applyProductMode;
+
   function localSeed(text) {
     let hash = 2166136261;
     for (let i = 0; i < text.length; i += 1) {
@@ -198,17 +261,78 @@
     }
   }
 
+  function presentationBasePrice(item) {
+    const override = Number(window.BIST_PRESENTATION_OVERRIDES?.[item.symbol]);
+    return Number.isFinite(override) && override > 0 ? override : item.base;
+  }
+
+  function simulationHourKey(date = new Date()) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}|${hh}`;
+  }
+
+  function sectorHourlyImpulse(sector, dayKey, hourIndex) {
+    const rnd = localRandom(localSeed(`sector|${sector}|${dayKey}|${hourIndex}`));
+    return (rnd() - .5) * .0028;
+  }
+
+  function marketHourlyImpulse(dayKey, hourIndex) {
+    const rnd = localRandom(localSeed(`market|${dayKey}|${hourIndex}`));
+    return (rnd() - .49) * .0024;
+  }
+
   function createLocalDemoPayload(period) {
     const source = window.BIST_DEMO_STOCKS || [];
-    const volatility = { '1s': 1.2, '1g': 3.2, '1h': 6.5, '1a': 11, '3a': 18, '1y': 38 }[period] || 3.2;
-    const dayKey = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const dayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentHour = now.getHours();
+    const hourKey = simulationHourKey(now);
+    const periodScale = { '15dk': .28, '1s': .45, '1g': 1, '1h': 1.25, '1a': 1.5, '3a': 1.8, '1y': 2.1 }[period] || 1;
+    // 09:00'dan mevcut saate kadar kümülatif küçük adımlar. Böylece saatler arasında süreklilik korunur.
+    const firstHour = 9;
+    const steps = Math.max(1, Math.min(12, currentHour - firstHour + 1));
+    const marketPath = Array.from({ length: steps }, (_, idx) => marketHourlyImpulse(dayKey, firstHour + idx));
+
     const stocks = source.map((item) => {
-      const random = localRandom(localSeed(`${item.symbol}|${period}|${dayKey}`));
-      const change = clamp((random() - .46) * volatility * 2.4, -24, 24);
-      const price = item.base * (.965 + random() * .07);
-      const reference = price / (1 + change / 100);
-      const spread = price * (.008 + random() * .025);
-      const open = price + (random() - .5) * spread;
+      const base = presentationBasePrice(item);
+      const openRnd = localRandom(localSeed(`${item.symbol}|open|${dayKey}`));
+      const openingMove = ((openRnd() - .5) * .018 + marketPath[0] * .7) * periodScale;
+      const open = Math.max(.01, base * (1 + openingMove));
+      let price = open;
+      let high = open;
+      let low = open;
+      let cumulativeAbsMove = Math.abs(openingMove);
+
+      for (let idx = 0; idx < steps; idx += 1) {
+        const hour = firstHour + idx;
+        const stockRnd = localRandom(localSeed(`${item.symbol}|hour|${dayKey}|${hour}`));
+        const idiosyncratic = (stockRnd() - .5) * .0055;
+        const sectorMove = sectorHourlyImpulse(item.sector, dayKey, hour);
+        const marketMove = marketPath[idx];
+        const impulse = (marketMove * .55 + sectorMove * .28 + idiosyncratic * .72) * periodScale;
+        price = Math.max(.01, price * (1 + impulse));
+        cumulativeAbsMove += Math.abs(impulse);
+        const wickRnd = localRandom(localSeed(`${item.symbol}|wick|${dayKey}|${hour}`));
+        const wick = price * (.0012 + wickRnd() * .0032) * periodScale;
+        high = Math.max(high, price + wick);
+        low = Math.min(low, Math.max(.01, price - wick));
+      }
+
+      // Günlük sunum simülasyonunda BIST payları için aşırı hareketleri engelle.
+      const maxMove = period === '15dk' ? .045 : period === '1g' ? .095 : .18;
+      price = clamp(price, base * (1 - maxMove), base * (1 + maxMove));
+      high = Math.max(open, price, Math.min(high, base * (1 + maxMove)));
+      low = Math.min(open, price, Math.max(low, base * (1 - maxMove)));
+      const reference = base;
+      const change = ((price - reference) / Math.max(reference, .0001)) * 100;
+      const volumeRnd = localRandom(localSeed(`${item.symbol}|volume|${hourKey}`));
+      const progress = clamp((steps + 1) / 11, .12, 1);
+      const liquidityFactor = clamp(Math.log10(Math.max(item.cap, 1)) - 8.8, .65, 3.2);
+      const volume = Math.round((2_200_000 + volumeRnd() * 28_000_000) * liquidityFactor * progress * (1 + cumulativeAbsMove * 24));
+
       return {
         symbol: item.symbol,
         name: item.name,
@@ -217,19 +341,20 @@
         change: Number(change.toFixed(2)),
         changeAmount: Number((price - reference).toFixed(2)),
         open: Number(open.toFixed(2)),
-        high: Number((Math.max(open, price) + random() * spread).toFixed(2)),
-        low: Number(Math.max(.01, Math.min(open, price) - random() * spread).toFixed(2)),
-        volume: Math.round(4000000 + random() * 236000000),
+        high: Number(high.toFixed(2)),
+        low: Number(low.toFixed(2)),
+        volume,
         marketCap: item.cap,
         currency: 'TRY',
-        source: 'demo',
+        source: 'presentation-simulation',
       };
     }).sort((a, b) => b.marketCap - a.marketCap);
+
     return {
       period,
       mode: 'demo',
-      sourceLabel: 'Demo veri · çevrimdışı ön izleme',
-      updatedAt: new Date().toISOString(),
+      sourceLabel: `Sunum Simülasyonu · Saatlik görünüm · ${String(currentHour).padStart(2, '0')}:00`,
+      updatedAt: now.toISOString(),
       stocks,
     };
   }
@@ -556,14 +681,24 @@
     $('#sourceDot').className = `source-dot ${state.sourceMode}`;
     $('#resultCount').textContent = `${state.filtered.length} hisse`;
 
-    const cards = [
+    const universe = activeUniverse();
+    const gainLeader = [...universe].sort((a, b) => changeFor(b) - changeFor(a))[0];
+    const lossLeader = [...universe].sort((a, b) => changeFor(a) - changeFor(b))[0];
+    const volumeLeader = [...universe].sort((a, b) => volumeFor(b) - volumeFor(a))[0];
+    const targetLeader = [...universe].sort((a, b) => (b.targetSnapshot?.avgPotential || 0) - (a.targetSnapshot?.avgPotential || 0))[0];
+    const cards = state.productMode === 'lite' ? [
+      { label: 'En Çok Yükselen', value: gainLeader ? `${gainLeader.symbol} ${formatPercent(changeFor(gainLeader))}` : '—', note: gainLeader?.name || 'Piyasa lideri', tone: 'gain' },
+      { label: 'En Çok Düşen', value: lossLeader ? `${lossLeader.symbol} ${formatPercent(changeFor(lossLeader))}` : '—', note: lossLeader?.name || 'Piyasa gerileyeni', tone: 'loss' },
+      { label: 'En Çok İşlem Gören', value: volumeLeader?.symbol || '—', note: volumeLeader ? `Hacim ${compact(volumeFor(volumeLeader))}` : '—', tone: 'neutral' },
+      { label: 'Piyasa Genişliği', value: `%${summary.breadth.toFixed(0)}`, note: `${summary.advances} yükselen · ${summary.declines} düşen`, tone: summary.breadth >= 50 ? 'gain' : 'loss' },
+    ] : [
       { label: 'Piyasa Genişliği', value: `%${summary.breadth.toFixed(0)}`, note: `${summary.advances} yükselen · ${summary.declines} düşen`, tone: summary.breadth >= 50 ? 'gain' : 'loss' },
       { label: 'Toplam Hacim', value: compact(summary.totalVolume), note: `Ort. RVol ${summary.avgRelVolume.toFixed(2)}x`, tone: 'neutral' },
       { label: 'En Güçlü Sektör', value: summary.strongestSector, note: formatPercent(summary.sectors[0]?.avgChange || 0), tone: 'gain' },
       { label: 'En Zayıf Sektör', value: summary.weakestSector, note: formatPercent(summary.sectors[summary.sectors.length - 1]?.avgChange || 0), tone: 'loss' },
-      { label: 'BIST 30 Etkisi', value: formatPercent(computeMarketSummary(activeUniverse().slice(0, 30)).marketChange), note: 'İlk 30 hisse ortalaması', tone: 'neutral' },
-      { label: 'Volatilite Ruhu', value: `${average(activeUniverse().map((stock) => stock.volatility)).toFixed(2)}%`, note: 'Günlük sentez volatilite', tone: 'neutral' },
-      { label: 'Hedef Potansiyeli Lideri', value: (() => { const leader = [...activeUniverse()].sort((a, b) => (b.targetSnapshot?.avgPotential || 0) - (a.targetSnapshot?.avgPotential || 0))[0]; return leader ? `${leader.symbol} ${formatPercent(leader.targetSnapshot?.avgPotential || 0)}` : '—'; })(), note: 'Konsensüs bazlı demo görünüm', tone: 'gain' },
+      { label: 'BIST 30 Etkisi', value: formatPercent(computeMarketSummary(universe.slice(0, 30)).marketChange), note: 'İlk 30 hisse ortalaması', tone: 'neutral' },
+      { label: 'Volatilite Ruhu', value: `${average(universe.map((stock) => stock.volatility)).toFixed(2)}%`, note: 'Günlük sentez volatilite', tone: 'neutral' },
+      { label: 'Hedef Potansiyeli Lideri', value: targetLeader ? `${targetLeader.symbol} ${formatPercent(targetLeader.targetSnapshot?.avgPotential || 0)}` : '—', note: 'Konsensüs bazlı görünüm', tone: 'gain' },
     ];
     $('#overviewCards').innerHTML = cards.map((card) => `
       <article class="overview-card">
@@ -571,6 +706,44 @@
         <strong class="value-${card.tone}">${card.value}</strong>
         <em>${card.note}</em>
       </article>`).join('');
+    updateMarketStory(summary);
+  }
+
+  function updateMarketStory(summary) {
+    const universe = activeUniverse();
+    if (!universe.length) return;
+    const marketTone = summary.marketChange > .55 ? 'pozitif' : summary.marketChange < -.55 ? 'negatif' : summary.marketChange >= 0 ? 'yatay-pozitif' : 'yatay-negatif';
+    const volumeDelta = (summary.avgRelVolume - 1) * 100;
+    const volumePhrase = volumeDelta > 12
+      ? `ortalamanın %${Math.abs(volumeDelta).toFixed(0)} üzerinde`
+      : volumeDelta < -12
+        ? `ortalamanın %${Math.abs(volumeDelta).toFixed(0)} altında`
+        : 'ortalamasına yakın';
+    const spikes = universe.filter((stock) => stock.relVolume > 1.45).length;
+    const newHighs = universe.filter((stock) => stock.flags?.newHigh).length;
+    const outperformers = universe.filter((stock) => relativePerformanceFor(stock) > 1).length;
+    const strongest = summary.sectors[0];
+    const weakest = summary.sectors[summary.sectors.length - 1];
+    const leadText = summary.marketChange >= 0
+      ? `BIST ${state.limit} ${marketTone} bir görünüm sergiliyor.`
+      : `BIST ${state.limit} ${marketTone} seyrediyor.`;
+    const sectorText = strongest && weakest
+      ? ` ${strongest.sector} ${formatPercent(strongest.avgChange)} ile öne çıkarken ${weakest.sector} ${formatPercent(weakest.avgChange)} ile zayıf kalıyor.`
+      : '';
+    const flowText = ` Hacim ${volumePhrase}; ${spikes} hissede hacim ivmesi, ${newHighs} hissede yeni zirve sinyali izleniyor.`;
+    const text = $('#marketStoryText');
+    if (text) text.textContent = `${leadText}${sectorText}${flowText}`;
+    const badge = $('#marketStoryBadge');
+    if (badge) {
+      badge.textContent = summary.breadth >= 55 ? 'Geniş katılım' : summary.breadth <= 40 ? 'Zayıf katılım' : 'Dengeli katılım';
+      badge.className = summary.breadth >= 55 ? 'gain' : summary.breadth <= 40 ? 'loss' : 'neutral';
+    }
+    const chips = $('#marketStoryChips');
+    if (chips) chips.innerHTML = `
+      <span class="${summary.marketChange >= 0 ? 'gain' : 'loss'}">BIST ${formatPercent(summary.marketChange)}</span>
+      <span>Piyasa genişliği %${summary.breadth.toFixed(0)}</span>
+      <span>Hacim ${summary.avgRelVolume.toFixed(2)}x</span>
+      <span>${outperformers} hisse BIST'in üzerinde</span>`;
   }
 
   function populateSectors() {
@@ -1254,6 +1427,7 @@
   }
 
   const CHART_PERIODS = {
+    '15dk': { label: '15 Dakika', count: 24 },
     '1g': { label: '1 Gün', count: 36 },
     '1h': { label: '1 Hafta', count: 60 },
     '1a': { label: '1 Ay', count: 90 },
@@ -1458,6 +1632,7 @@
         <div class="distribution-labels"><span>Olumlu ${analysis.distribution.buy}</span><span>Nötr/Tut ${analysis.distribution.hold}</span><span>Olumsuz ${analysis.distribution.sell}</span></div>
       </div>`;
     renderTargetInsights(analysis, stock);
+    if (state.productMode === 'lite') renderLiteDrawer(stock, analysis);
     $('#targetRecommendations').innerHTML = items.map((item) => {
       const tone = recommendationTone(item.recommendation);
       const revisionClass = item.revisionPct >= 0 ? 'value-gain' : 'value-loss';
@@ -1516,6 +1691,87 @@
     }
   }
 
+  function createFundHoldings(stock) {
+    const rnd = localRandom(localSeed(`${stock.symbol}|fund-holdings|2026-07`));
+    const coverage = 4 + Math.floor(rnd() * 6);
+    const selected = [...FUND_UNIVERSE]
+      .map((fund) => ({ fund, score: localRandom(localSeed(`${stock.symbol}|${fund.code}`))() }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, coverage)
+      .map(({ fund }, index) => {
+        const seeded = localRandom(localSeed(`${stock.symbol}|${fund.code}|weight`));
+        const weight = Number((0.45 + seeded() * (index < 2 ? 7.8 : 4.4)).toFixed(2));
+        const previousWeight = Math.max(0, Number((weight + (seeded() - .48) * 2.2).toFixed(2)));
+        const change = Number((weight - previousWeight).toFixed(2));
+        const action = previousWeight < .15 ? 'Yeni Pozisyon' : change > .18 ? 'Artırdı' : change < -.18 ? 'Azalttı' : 'Korudu';
+        const actionTone = action === 'Artırdı' || action === 'Yeni Pozisyon' ? 'gain' : action === 'Azalttı' ? 'loss' : 'neutral';
+        return { ...fund, weight, previousWeight, change, action, actionTone };
+      })
+      .sort((a, b) => b.weight - a.weight);
+    return selected;
+  }
+
+  function renderFundHoldings(stock) {
+    const items = createFundHoldings(stock);
+    const maxWeight = Math.max(...items.map((item) => item.weight), 0);
+    const avgWeight = average(items.map((item) => item.weight));
+    const increased = items.filter((item) => item.action === 'Artırdı' || item.action === 'Yeni Pozisyon').length;
+    const decreased = items.filter((item) => item.action === 'Azalttı').length;
+    $('#fundSourceNote').innerHTML = `
+      <strong>Fonlarda bulunan hisse görünümü</strong>
+      <span>Kaynak tasarımı KAP portföy dağılım raporlarına göre hazırlanmıştır. Bu GitHub Pages sürümündeki fon-hisse eşleşmeleri ve ağırlıklar prototip veridir; gerçek entegrasyonda aylık KAP raporlarından güncellenecektir.</span>`;
+    $('#fundSummary').innerHTML = `
+      <div class="fund-summary-card"><span>Taşıyan Fon</span><strong>${items.length}</strong></div>
+      <div class="fund-summary-card"><span>En Yüksek Ağırlık</span><strong>%${trNumber.format(maxWeight)}</strong></div>
+      <div class="fund-summary-card"><span>Ortalama Ağırlık</span><strong>%${trNumber.format(avgWeight)}</strong></div>
+      <div class="fund-summary-card"><span>Son Ay Hareketi</span><strong class="value-gain">${increased} artırdı</strong><small>${decreased} azalttı</small></div>`;
+    $('#fundHoldings').innerHTML = `
+      <div class="fund-list-head"><div><strong>${stock.symbol} hangi fonlarda var?</strong><span>Son rapor dönemi · Haziran 2026</span></div><span>${items.length} eşleşme</span></div>
+      ${items.map((item, index) => `
+        <article class="fund-card">
+          <div class="fund-card-rank">${index + 1}</div>
+          <div class="fund-card-main">
+            <div class="fund-card-head">
+              <div><strong>${item.code} · ${item.name}</strong><span>${item.founder} · ${item.type}</span></div>
+              <span class="fund-action ${item.actionTone}">${item.action}</span>
+            </div>
+            <div class="fund-weight-row">
+              <div><span>Fon içindeki ağırlık</span><strong>%${trNumber.format(item.weight)}</strong></div>
+              <div><span>Önceki ay</span><strong>%${trNumber.format(item.previousWeight)}</strong></div>
+              <div><span>Aylık değişim</span><strong class="${item.change >= 0 ? 'value-gain' : 'value-loss'}">${item.change >= 0 ? '+' : ''}${trNumber.format(item.change)} puan</strong></div>
+            </div>
+            <div class="fund-weight-bar"><i style="width:${clamp(item.weight / Math.max(maxWeight, .01) * 100, 3, 100)}%"></i></div>
+          </div>
+        </article>`).join('')}
+      <div class="fund-empty-note">Listede görünmeyen fonlar için “yok” sonucu, gerçek KAP entegrasyonunda taranan fon evrenine göre hesaplanacaktır.</div>`;
+  }
+
+  function renderLiteDrawer(stock, targetAnalysis = null) {
+    if (!stock) return;
+    const funds = createFundHoldings(stock);
+    const topFunds = funds.slice(0, 3);
+    const currentPrice = priceFor(stock);
+    const targetPrice = targetAnalysis?.avgTarget || stock.targetSnapshot?.avgTarget || currentPrice;
+    const targetPotential = targetAnalysis?.avgPotential ?? stock.targetSnapshot?.avgPotential ?? 0;
+    const dayRangePct = stock.low > 0 ? ((stock.high / stock.low) - 1) * 100 : 0;
+    $('#liteDayRange').textContent = `${formatPrice(stock.low)} — ${formatPrice(stock.high)}`;
+    $('#liteDayRangeNote').textContent = `Gün içi bant ${formatPctValue(dayRangePct)}`;
+    $('#liteTargetPrice').textContent = formatPrice(targetPrice);
+    $('#liteTargetPotential').innerHTML = `<span class="${targetPotential >= 0 ? 'value-gain' : 'value-loss'}">${formatPercent(targetPotential)} potansiyel</span>`;
+    $('#liteFundCount').textContent = `${funds.length} fon`;
+    $('#liteTopFund').textContent = topFunds[0] ? `En yüksek ${topFunds[0].code} · %${trNumber.format(topFunds[0].weight)}` : 'Fon eşleşmesi yok';
+    $('#liteYearPosition').textContent = `%${clamp(stock.pricePosition, 0, 100).toFixed(0)}`;
+    $('#liteYearRange').textContent = `${formatPrice(stock.yearLow)} — ${formatPrice(stock.yearHigh)}`;
+    $('#liteFundList').innerHTML = topFunds.length ? topFunds.map((fund) => `
+      <div class="lite-fund-row">
+        <div><strong>${fund.code}</strong><span>${fund.name}</span></div>
+        <b>%${trNumber.format(fund.weight)}</b>
+      </div>`).join('') : '<div class="lite-empty">Bu hisse için fon eşleşmesi bulunamadı.</div>';
+    const news = (stock.news || []).slice(0, 3);
+    $('#liteNewsList').innerHTML = news.length ? news.map((item) => `
+      <article><span class="news-tag ${item.level}">${item.tag}</span><div><strong>${item.title}</strong><small>${item.source} · ${item.time}</small></div></article>`).join('') : '<div class="lite-empty">Öne çıkan gelişme bulunmuyor.</div>';
+  }
+
   function renderDrawer(stock) {
     if (!stock) return;
     state.selected = stock;
@@ -1529,6 +1785,8 @@
     changeEl.textContent = `${formatPercent(current.change)} · ${current.changeAmount >= 0 ? '+' : ''}${trNumber.format(current.changeAmount)} ₺`;
     changeEl.className = `change-pill ${current.change >= 0 ? 'gain' : 'loss'}`;
 
+    renderLiteDrawer(stock);
+
     renderMetricGrid('#drawerOverviewGrid', [
       { label: 'Açılış', value: formatPrice(stock.open) },
       { label: 'Önceki Kapanış', value: formatPrice(stock.previousClose) },
@@ -1541,6 +1799,7 @@
       { label: "BIST'e Göre", value: formatPercent(relativePerformanceFor(stock)), tone: relativePerformanceFor(stock) >= 0 ? "gain" : "loss" },
       { label: 'Beta', value: stock.beta.toFixed(2) },
       { label: 'Hedef Potansiyeli', value: `${formatPercent(stock.targetSnapshot?.avgPotential || 0)} · ${formatPrice(stock.targetSnapshot?.avgTarget || priceFor(stock))}`, wide: true, tone: (stock.targetSnapshot?.avgPotential || 0) >= 0 ? 'gain' : 'loss' },
+      { label: 'Fon Sahipliği', value: `${createFundHoldings(stock).length} fonda bulunuyor`, wide: true, tone: 'gain' },
     ]);
 
     $('#drawerYearRangeText').textContent = `${formatPrice(stock.yearLow)} — ${formatPrice(stock.yearHigh)}`;
@@ -1548,7 +1807,7 @@
     $('#drawerMetaInfo').innerHTML = `
       <div><strong>Veri kaynağı:</strong> ${state.sourceLabel}</div>
       <div><strong>Güncelleme:</strong> ${trDate.format(new Date(state.updatedAt))}</div>
-      <div><strong>Durum:</strong> ${state.sourceMode === 'live' ? 'Gecikmeli canlı veri' : 'Demo / prototip verisi'}</div>
+      <div><strong>Durum:</strong> ${state.sourceMode === 'delayed' ? 'Yaklaşık 15 dk gecikmeli piyasa verisi' : state.sourceMode === 'cache' ? 'Son başarılı gerçek veri (bağlantı yenileniyor)' : state.sourceMode === 'live' ? 'Canlı / gecikmeli veri' : 'Veri bağlantısı hazırlanıyor'}</div>
       <div><strong>Zaman Akışı:</strong> ${TIMELINE_STEPS[state.timelineIndex].label} (${TIMELINE_STEPS[state.timelineIndex].time})</div>`;
 
     const fkSectorAvg = sectorPeerAverage(stock, 'pe');
@@ -1621,6 +1880,8 @@
         <p>${item.body}</p>
         <div class="news-meta"><span>${item.source}</span><span>${item.time}</span></div>
       </article>`).join('');
+
+    renderFundHoldings(stock);
 
     $('#aiSummaryCard').innerHTML = `
       <h3>${stock.aiSummary.title}</h3>
@@ -1773,59 +2034,248 @@
     }, 900);
   }
 
-  async function loadData(period = state.period, force = false) {
+  function buildGitHubStaticStocks(period) {
+    const now = new Date();
+    const hourKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}-${now.getHours()}`;
+    const periodAmp = { '15dk': .35, '1s': .55, '1g': 1, '1h': 1.35, '1a': 1.65, '3a': 1.9, '1y': 2.2 }[period] || 1;
+    const list = Array.isArray(window.BIST_DEMO_STOCKS) ? window.BIST_DEMO_STOCKS : [];
+    return list.map((item, index) => {
+      const override = Number(window.BIST_PRESENTATION_OVERRIDES?.[item.symbol]);
+      const reference = Number.isFinite(override) ? override : Number(item.base || 10);
+      const marketRnd = localRandom(localSeed(`market|${hourKey}|${period}`));
+      const sectorRnd = localRandom(localSeed(`sector|${item.sector}|${hourKey}|${period}`));
+      const stockRnd = localRandom(localSeed(`${item.symbol}|${hourKey}|${period}|${index}`));
+      const marketMove = (marketRnd() - .5) * 1.45 * periodAmp;
+      const sectorMove = (sectorRnd() - .5) * 1.9 * periodAmp;
+      const idioMove = (stockRnd() - .5) * 4.2 * periodAmp;
+      const change = clamp(marketMove * .48 + sectorMove * .30 + idioMove * .52, -8.5, 8.5);
+      const price = Math.max(.01, reference * (1 + change / 100));
+      const previousClose = reference;
+      const openMove = (stockRnd() - .5) * Math.min(1.7, periodAmp);
+      const open = previousClose * (1 + openMove / 100);
+      const range = (.006 + stockRnd() * .022) * Math.max(.75, periodAmp);
+      const high = Math.max(price, open) * (1 + range);
+      const low = Math.min(price, open) * (1 - range * .9);
+      const volume = Math.round((8_000_000 + stockRnd() * 520_000_000) * (.72 + periodAmp * .28));
+      return {
+        symbol: item.symbol,
+        name: item.name,
+        sector: item.sector,
+        price: Number(price.toFixed(2)),
+        change: Number(change.toFixed(2)),
+        changeAmount: Number((price - previousClose).toFixed(2)),
+        open: Number(open.toFixed(2)),
+        high: Number(high.toFixed(2)),
+        low: Number(low.toFixed(2)),
+        volume,
+        marketCap: Number(item.cap || 1_000_000_000),
+      };
+    });
+  }
+
+  function applyStaticMarketData(period) {
     state.period = period;
-    loadingState.hidden = false;
-    loadingState.style.display = '';
-    if (window.BIST_STATIC_MODE) {
-      const payload = createLocalDemoPayload(period);
-      payload.sourceLabel = 'Sunum verisi · GitHub Pages statik sürüm';
-      state.sourceLabel = payload.sourceLabel;
-      state.updatedAt = payload.updatedAt;
-      state.sourceMode = payload.mode;
-      state.rawStocks = buildEnrichedStocks(payload.stocks || []);
-      populateSectors();
-      updateTimelineControls();
-      applyFilters(false);
-      renderScannerGroups();
-      loadingState.hidden = true;
-      loadingState.style.display = 'none';
-      return;
+    state.sourceLabel = 'GitHub Pages · sunum simülasyonu';
+    state.updatedAt = new Date().toISOString();
+    state.sourceMode = 'demo';
+    state.rawStocks = buildEnrichedStocks(buildGitHubStaticStocks(period));
+    populateSectors();
+    updateTimelineControls();
+    applyFilters(false);
+    renderScannerGroups();
+    loadingState.hidden = true;
+    loadingState.style.display = 'none';
+  }
+
+  async function loadData(period = state.period, force = false) {
+    if (window.BIST_MARKET_STATIC_MODE) { applyStaticMarketData(period); return; }
+    state.period = period;
+    const firstLoad = !state.rawStocks.length;
+    if (firstLoad) {
+      loadingState.hidden = false;
+      loadingState.style.display = '';
+      const title = loadingState.querySelector('strong');
+      const subtitle = loadingState.querySelector('span');
+      if (title) title.textContent = 'TradingView gecikmeli verisi bağlanıyor';
+      if (subtitle) subtitle.textContent = 'BIST hisseleri tek WebSocket akışından hazırlanıyor…';
     }
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), firstLoad ? 10000 : 3500);
       const response = await fetch(`/api/market?period=${encodeURIComponent(period)}${force ? `&_=${Date.now()}` : ''}`, {
         cache: 'no-store',
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const payload = await response.json();
-      state.sourceLabel = payload.sourceLabel || 'Veri';
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(payload.stocks) || !payload.stocks.length) {
+        throw new Error(payload?.error || `HTTP ${response.status}`);
+      }
+      state.sourceLabel = payload.sourceLabel || 'TradingView · gecikmeli veri';
       state.updatedAt = payload.updatedAt || new Date().toISOString();
-      state.sourceMode = payload.mode || 'live';
+      state.sourceMode = payload.mode || 'delayed';
       state.rawStocks = buildEnrichedStocks(payload.stocks || []);
-    } catch (error) {
-      console.warn('API kullanılamadı, demo veriye geçiliyor.', error);
-      const payload = createLocalDemoPayload(period);
-      state.sourceLabel = payload.sourceLabel;
-      state.updatedAt = payload.updatedAt;
-      state.sourceMode = payload.mode;
-      state.rawStocks = buildEnrichedStocks(payload.stocks || []);
-    } finally {
       populateSectors();
       updateTimelineControls();
       applyFilters(false);
       renderScannerGroups();
       loadingState.hidden = true;
       loadingState.style.display = 'none';
+    } catch (error) {
+      console.warn('Gecikmeli piyasa veri bağlantısı bekleniyor.', error);
+      if (state.rawStocks.length) {
+        // Son başarılı gerçek snapshot ekranda kalır. Demo fiyat üretme.
+        state.sourceMode = 'cache';
+        state.sourceLabel = 'Son başarılı gerçek veri · TradingView bağlantısı yenileniyor';
+        updateSummaryUI(computeMarketSummary(state.filtered.length ? state.filtered : state.rawStocks));
+        loadingState.hidden = true;
+        loadingState.style.display = 'none';
+      } else {
+        loadingState.hidden = false;
+        loadingState.style.display = '';
+        const title = loadingState.querySelector('strong');
+        const subtitle = loadingState.querySelector('span');
+        if (title) title.textContent = 'Gecikmeli veri henüz alınamadı';
+        if (subtitle) subtitle.textContent = 'Bağlantı otomatik yeniden deneniyor. İnternet bağlantısını kontrol edin.';
+      }
     }
   }
+
+  function closeQuickActionMenu() {
+    const menu = $('#quickActionMenu');
+    if (menu) menu.hidden = true;
+    state.quickActionStock = null;
+  }
+
+  function showQuickActionMenu(stock, clientX, clientY) {
+    if (!stock) return;
+    state.quickActionStock = stock;
+    const menu = $('#quickActionMenu');
+    $('#quickActionLogo').textContent = stock.symbol.slice(0, 2);
+    $('#quickActionSymbol').textContent = stock.symbol;
+    $('#quickActionName').textContent = stock.name;
+    $('#quickActionPrice').textContent = formatPrice(priceFor(stock));
+    const changeEl = $('#quickActionChange');
+    changeEl.textContent = formatPercent(changeFor(stock));
+    changeEl.className = changeFor(stock) >= 0 ? 'gain' : 'loss';
+    menu.hidden = false;
+    requestAnimationFrame(() => {
+      const rect = menu.getBoundingClientRect();
+      const margin = 12;
+      const left = clamp(clientX, margin, Math.max(margin, window.innerWidth - rect.width - margin));
+      const top = clamp(clientY, margin, Math.max(margin, window.innerHeight - rect.height - margin));
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    });
+  }
+
+  function tradingViewUrl(stock) {
+    return `https://www.tradingview.com/symbols/BIST-${encodeURIComponent(stock.symbol)}/`;
+  }
+
+  function roundRectPath(context, x, y, width, height, radius) {
+    const r = Math.min(radius, width / 2, height / 2);
+    context.beginPath();
+    context.moveTo(x + r, y);
+    context.arcTo(x + width, y, x + width, y + height, r);
+    context.arcTo(x + width, y + height, x, y + height, r);
+    context.arcTo(x, y + height, x, y, r);
+    context.arcTo(x, y, x + width, y, r);
+    context.closePath();
+  }
+
+  function drawShareMetric(context, x, y, width, label, value, tone = 'normal') {
+    roundRectPath(context, x, y, width, 138, 24);
+    context.fillStyle = '#0d211a';
+    context.fill();
+    context.strokeStyle = 'rgba(164,220,194,.12)';
+    context.lineWidth = 2;
+    context.stroke();
+    context.fillStyle = '#86a89a';
+    context.font = '600 28px Arial, sans-serif';
+    context.fillText(label, x + 26, y + 42);
+    context.fillStyle = tone === 'gain' ? '#27e49a' : tone === 'loss' ? '#ff5d7d' : '#f1fbf6';
+    context.font = '800 38px Arial, sans-serif';
+    context.fillText(value, x + 26, y + 96);
+  }
+
+  async function shareStockCard(stock) {
+    if (!stock) return;
+    const card = document.createElement('canvas');
+    card.width = 1080;
+    card.height = 1350;
+    const c = card.getContext('2d');
+    const change = changeFor(stock);
+    const funds = createFundHoldings(stock);
+    const targetPotential = stock.targetSnapshot?.avgPotential || 0;
+    const targetPrice = stock.targetSnapshot?.avgTarget || priceFor(stock);
+
+    const bg = c.createLinearGradient(0, 0, 1080, 1350);
+    bg.addColorStop(0, '#06130f');
+    bg.addColorStop(1, '#0a241b');
+    c.fillStyle = bg;
+    c.fillRect(0, 0, 1080, 1350);
+
+    c.fillStyle = 'rgba(39,228,154,.08)';
+    c.beginPath(); c.arc(940, 120, 260, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(120, 1260, 300, 0, Math.PI * 2); c.fill();
+
+    roundRectPath(c, 64, 58, 70, 70, 18); c.fillStyle = '#0d513b'; c.fill();
+    c.fillStyle = '#27e49a';
+    [0,1,2].forEach((i) => c.fillRect(82 + i * 15, 94 - i * 10, 8, 20 + i * 10));
+    c.fillStyle = '#f1fbf6'; c.font = '800 34px Arial, sans-serif'; c.fillText('BIST BALONCUKLARI', 158, 90);
+    c.fillStyle = '#78a08e'; c.font = '600 22px Arial, sans-serif'; c.fillText(state.productMode === 'pro' ? 'PRO ANALİZ KARTI' : 'LITE HİSSE KARTI', 158, 122);
+
+    c.fillStyle = '#79aa95'; c.font = '700 30px Arial, sans-serif'; c.fillText(stock.sector.toUpperCase(), 70, 246);
+    c.fillStyle = '#f5fff9'; c.font = '900 88px Arial, sans-serif'; c.fillText(stock.symbol, 68, 346);
+    c.fillStyle = '#a5c0b4'; c.font = '600 34px Arial, sans-serif'; c.fillText(stock.name, 72, 402);
+
+    c.fillStyle = '#f5fff9'; c.font = '900 82px Arial, sans-serif'; c.fillText(formatPrice(priceFor(stock)), 70, 520);
+    roundRectPath(c, 70, 550, 250, 76, 22); c.fillStyle = change >= 0 ? 'rgba(39,228,154,.13)' : 'rgba(255,93,125,.13)'; c.fill();
+    c.fillStyle = change >= 0 ? '#27e49a' : '#ff5d7d'; c.font = '800 38px Arial, sans-serif'; c.fillText(formatPercent(change), 94, 600);
+
+    drawShareMetric(c, 70, 690, 450, 'Kurum Ortalama Hedefi', formatPrice(targetPrice), targetPotential >= 0 ? 'gain' : 'loss');
+    drawShareMetric(c, 560, 690, 450, 'Hedef Potansiyeli', formatPercent(targetPotential), targetPotential >= 0 ? 'gain' : 'loss');
+    drawShareMetric(c, 70, 856, 450, 'Fon Sahipliği', `${funds.length} fon`, 'normal');
+    drawShareMetric(c, 560, 856, 450, "BIST'e Göre", formatPercent(relativePerformanceFor(stock)), relativePerformanceFor(stock) >= 0 ? 'gain' : 'loss');
+
+    c.fillStyle = '#8cae9f'; c.font = '600 24px Arial, sans-serif'; c.fillText('Veri kaynağı', 72, 1080);
+    c.fillStyle = '#e7f4ed'; c.font = '700 28px Arial, sans-serif'; c.fillText(state.sourceLabel || 'BIST Baloncukları', 72, 1122);
+    c.fillStyle = '#78998b'; c.font = '500 22px Arial, sans-serif'; c.fillText(`Güncelleme: ${trDate.format(new Date(state.updatedAt))}`, 72, 1168);
+    c.fillText('Bilgilendirme amaçlıdır; yatırım tavsiyesi değildir.', 72, 1258);
+    c.fillStyle = '#27e49a'; c.font = '800 24px Arial, sans-serif'; c.fillText('BIST BALONCUKLARI', 760, 1258);
+
+    const blob = await new Promise((resolve) => card.toBlob(resolve, 'image/png', .96));
+    if (!blob) return;
+    const filename = `${stock.symbol}-bist-baloncuklari.png`;
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: `${stock.symbol} · BIST Baloncukları`, text: `${stock.symbol} ${formatPrice(priceFor(stock))} · ${formatPercent(change)}`, files: [file] });
+        showModeToast('Hisse kartı paylaşım menüsü açıldı');
+        return;
+      }
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    showModeToast(`${stock.symbol} paylaşım kartı PNG olarak hazırlandı`);
+  }
+
+  let longPressTimer = 0;
+  let longPressTriggered = false;
 
   canvas.addEventListener('pointermove', (event) => {
     const { x, y } = pointerPosition(event);
     if (state.dragging) {
+      if (Math.hypot(x - state.dragStartX, y - state.dragStartY) > 10) clearTimeout(longPressTimer);
       state.dragging.x = x - state.dragOffsetX;
       state.dragging.y = y - state.dragOffsetY;
       state.dragging.vx = 0;
@@ -1838,6 +2288,8 @@
     showTooltip(state.hovered, x, y);
   });
   canvas.addEventListener('pointerdown', (event) => {
+    if (event.button === 2) return;
+    closeQuickActionMenu();
     const { x, y } = pointerPosition(event);
     const node = nodeAt(x, y);
     if (!node) return;
@@ -1848,8 +2300,21 @@
     state.dragStartY = y;
     canvas.classList.add('dragging');
     canvas.setPointerCapture(event.pointerId);
+    longPressTriggered = false;
+    clearTimeout(longPressTimer);
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      longPressTimer = setTimeout(() => {
+        longPressTriggered = true;
+        state.dragging = null;
+        canvas.classList.remove('dragging');
+        tooltip.hidden = true;
+        showQuickActionMenu(node.stock, event.clientX, event.clientY);
+      }, 560);
+    }
   });
   canvas.addEventListener('pointerup', (event) => {
+    clearTimeout(longPressTimer);
+    if (longPressTriggered) { longPressTriggered = false; return; }
     if (!state.dragging) return;
     const dragged = state.dragging;
     const { x, y } = pointerPosition(event);
@@ -1858,9 +2323,15 @@
     canvas.classList.remove('dragging');
     if (moved < 8) openDrawer(dragged.stock);
   });
-  canvas.addEventListener('pointercancel', () => { state.dragging = null; canvas.classList.remove('dragging'); });
+  canvas.addEventListener('pointercancel', () => { clearTimeout(longPressTimer); longPressTriggered = false; state.dragging = null; canvas.classList.remove('dragging'); });
   canvas.addEventListener('pointerleave', () => { if (!state.dragging) { state.hovered = null; tooltip.hidden = true; } });
   canvas.addEventListener('dblclick', () => rebuildNodes(false));
+  canvas.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    const { x, y } = pointerPosition(event);
+    const node = nodeAt(x, y);
+    if (node) showQuickActionMenu(node.stock, event.clientX, event.clientY);
+  });
 
   $('#searchInput').addEventListener('input', (event) => { state.query = event.target.value; applyFilters(); });
   $('#sectorSelect').addEventListener('change', (event) => { state.sector = event.target.value; applyFilters(); });
@@ -1902,10 +2373,31 @@
     $$('.chart-periods button').forEach((item) => item.classList.toggle('active', item === button));
     if (state.selected) drawMiniChart(state.selected);
   }));
+  $('#liteGoProBtn')?.addEventListener('click', () => applyProductMode('pro', true));
   $('#drawerFavoriteBtn').addEventListener('click', () => state.selected && toggleFavorite(state.selected.symbol));
+  $('#drawerShareBtn').addEventListener('click', () => state.selected && shareStockCard(state.selected));
   $('#drawerCompareBtn').addEventListener('click', () => state.selected && toggleCompare(state.selected.symbol));
   $('#drawerPortfolioBtn').addEventListener('click', () => state.selected && togglePortfolioSymbol(state.selected));
   $('#drawerAlertBtn').addEventListener('click', () => state.selected && addAlertFor(state.selected));
+
+  $('#quickActionClose')?.addEventListener('click', closeQuickActionMenu);
+  $('#quickActionMenu')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-quick-action]');
+    if (!button || !state.quickActionStock) return;
+    const stock = state.quickActionStock;
+    const action = button.dataset.quickAction;
+    closeQuickActionMenu();
+    if (action === 'detail') openDrawer(stock);
+    if (action === 'favorite') toggleFavorite(stock.symbol);
+    if (action === 'compare') toggleCompare(stock.symbol);
+    if (action === 'alert') addAlertFor(stock);
+    if (action === 'share') shareStockCard(stock);
+    if (action === 'tradingview') window.open(tradingViewUrl(stock), '_blank', 'noopener,noreferrer');
+  });
+  document.addEventListener('pointerdown', (event) => {
+    const menu = $('#quickActionMenu');
+    if (!menu?.hidden && !menu.contains(event.target) && event.target !== canvas) closeQuickActionMenu();
+  });
 
   $('#sectorHeatList').addEventListener('click', (event) => {
     const button = event.target.closest('[data-sector]');
@@ -1973,10 +2465,11 @@
   document.addEventListener('fullscreenchange', resizeCanvas);
 
   try { if (localStorage.getItem(STORAGE.theme) === 'light') document.documentElement.classList.add('light'); } catch {}
+  applyProductMode(state.productMode, false);
   updateMarketStatus();
   setInterval(updateMarketStatus, 60_000);
   resizeCanvas();
   animate();
   loadData();
-  setInterval(() => loadData(state.period, true), 120_000);
+  setInterval(() => loadData(state.period, true), 5_000);
 })();

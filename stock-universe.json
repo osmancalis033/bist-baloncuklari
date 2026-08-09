@@ -1,0 +1,702 @@
+[
+  {
+    "symbol": "THYAO",
+    "name": "Türk Hava Yolları",
+    "sector": "Ulaştırma",
+    "cap": 420000000000,
+    "base": 305.0
+  },
+  {
+    "symbol": "ASELS",
+    "name": "Aselsan",
+    "sector": "Savunma",
+    "cap": 390000000000,
+    "base": 85.0
+  },
+  {
+    "symbol": "TUPRS",
+    "name": "Tüpraş",
+    "sector": "Enerji",
+    "cap": 320000000000,
+    "base": 165.0
+  },
+  {
+    "symbol": "BIMAS",
+    "name": "BİM Mağazalar",
+    "sector": "Perakende",
+    "cap": 315000000000,
+    "base": 520.0
+  },
+  {
+    "symbol": "GARAN",
+    "name": "Garanti BBVA",
+    "sector": "Bankacılık",
+    "cap": 310000000000,
+    "base": 132.0
+  },
+  {
+    "symbol": "AKBNK",
+    "name": "Akbank",
+    "sector": "Bankacılık",
+    "cap": 300000000000,
+    "base": 68.0
+  },
+  {
+    "symbol": "KCHOL",
+    "name": "Koç Holding",
+    "sector": "Holding",
+    "cap": 290000000000,
+    "base": 185.0
+  },
+  {
+    "symbol": "YKBNK",
+    "name": "Yapı Kredi",
+    "sector": "Bankacılık",
+    "cap": 265000000000,
+    "base": 34.0
+  },
+  {
+    "symbol": "ISCTR",
+    "name": "Türkiye İş Bankası C",
+    "sector": "Bankacılık",
+    "cap": 255000000000,
+    "base": 15.0
+  },
+  {
+    "symbol": "SAHOL",
+    "name": "Sabancı Holding",
+    "sector": "Holding",
+    "cap": 230000000000,
+    "base": 98.0
+  },
+  {
+    "symbol": "TCELL",
+    "name": "Turkcell",
+    "sector": "İletişim",
+    "cap": 225000000000,
+    "base": 102.0
+  },
+  {
+    "symbol": "EREGL",
+    "name": "Ereğli Demir Çelik",
+    "sector": "Metal",
+    "cap": 215000000000,
+    "base": 29.0
+  },
+  {
+    "symbol": "FROTO",
+    "name": "Ford Otosan",
+    "sector": "Otomotiv",
+    "cap": 205000000000,
+    "base": 86.0
+  },
+  {
+    "symbol": "SISE",
+    "name": "Şişecam",
+    "sector": "Cam & Kimya",
+    "cap": 195000000000,
+    "base": 42.0
+  },
+  {
+    "symbol": "TOASO",
+    "name": "Tofaş",
+    "sector": "Otomotiv",
+    "cap": 175000000000,
+    "base": 248.0
+  },
+  {
+    "symbol": "PETKM",
+    "name": "Petkim",
+    "sector": "Petrokimya",
+    "cap": 160000000000,
+    "base": 18.0
+  },
+  {
+    "symbol": "ENKAI",
+    "name": "Enka İnşaat",
+    "sector": "İnşaat",
+    "cap": 158000000000,
+    "base": 67.0
+  },
+  {
+    "symbol": "MGROS",
+    "name": "Migros",
+    "sector": "Perakende",
+    "cap": 145000000000,
+    "base": 505.0
+  },
+  {
+    "symbol": "ULKER",
+    "name": "Ülker Bisküvi",
+    "sector": "Gıda",
+    "cap": 132000000000,
+    "base": 118.0
+  },
+  {
+    "symbol": "CCOLA",
+    "name": "Coca-Cola İçecek",
+    "sector": "İçecek",
+    "cap": 128000000000,
+    "base": 880.0
+  },
+  {
+    "symbol": "PGSUS",
+    "name": "Pegasus",
+    "sector": "Ulaştırma",
+    "cap": 125000000000,
+    "base": 250.0
+  },
+  {
+    "symbol": "ASTOR",
+    "name": "Astor Enerji",
+    "sector": "Elektrik Ekipmanları",
+    "cap": 118000000000,
+    "base": 104.0
+  },
+  {
+    "symbol": "EKGYO",
+    "name": "Emlak Konut GYO",
+    "sector": "Gayrimenkul",
+    "cap": 105000000000,
+    "base": 13.0
+  },
+  {
+    "symbol": "OYAKC",
+    "name": "Oyak Çimento",
+    "sector": "Çimento",
+    "cap": 98000000000,
+    "base": 72.0
+  },
+  {
+    "symbol": "GUBRF",
+    "name": "Gübre Fabrikaları",
+    "sector": "Tarım & Kimya",
+    "cap": 94000000000,
+    "base": 280.0
+  },
+  {
+    "symbol": "SASA",
+    "name": "Sasa Polyester",
+    "sector": "Kimya",
+    "cap": 90000000000,
+    "base": 43.0
+  },
+  {
+    "symbol": "HEKTS",
+    "name": "Hektaş",
+    "sector": "Tarım & Kimya",
+    "cap": 82000000000,
+    "base": 4.6
+  },
+  {
+    "symbol": "ALARK",
+    "name": "Alarko Holding",
+    "sector": "Holding",
+    "cap": 80000000000,
+    "base": 96.0
+  },
+  {
+    "symbol": "TRALT",
+    "name": "Türk Altın İşletmeleri",
+    "sector": "Madencilik",
+    "cap": 79000000000,
+    "base": 29.0
+  },
+  {
+    "symbol": "DOAS",
+    "name": "Doğuş Otomotiv",
+    "sector": "Otomotiv",
+    "cap": 76000000000,
+    "base": 226.0
+  },
+  {
+    "symbol": "ARCLK",
+    "name": "Arçelik",
+    "sector": "Dayanıklı Tüketim",
+    "cap": 74000000000,
+    "base": 132.0
+  },
+  {
+    "symbol": "OTKAR",
+    "name": "Otokar",
+    "sector": "Savunma",
+    "cap": 71000000000,
+    "base": 520.0
+  },
+  {
+    "symbol": "VAKBN",
+    "name": "VakıfBank",
+    "sector": "Bankacılık",
+    "cap": 70000000000,
+    "base": 26.0
+  },
+  {
+    "symbol": "HALKB",
+    "name": "Halkbank",
+    "sector": "Bankacılık",
+    "cap": 68000000000,
+    "base": 24.0
+  },
+  {
+    "symbol": "TSKB",
+    "name": "TSKB",
+    "sector": "Bankacılık",
+    "cap": 61000000000,
+    "base": 12.0
+  },
+  {
+    "symbol": "TAVHL",
+    "name": "TAV Havalimanları",
+    "sector": "Ulaştırma",
+    "cap": 60000000000,
+    "base": 245.0
+  },
+  {
+    "symbol": "SOKM",
+    "name": "Şok Marketler",
+    "sector": "Perakende",
+    "cap": 58000000000,
+    "base": 43.0
+  },
+  {
+    "symbol": "AEFES",
+    "name": "Anadolu Efes",
+    "sector": "İçecek",
+    "cap": 56000000000,
+    "base": 208.0
+  },
+  {
+    "symbol": "ENJSA",
+    "name": "Enerjisa Enerji",
+    "sector": "Enerji",
+    "cap": 54000000000,
+    "base": 68.0
+  },
+  {
+    "symbol": "KONTR",
+    "name": "Kontrolmatik",
+    "sector": "Teknoloji",
+    "cap": 52000000000,
+    "base": 50.0
+  },
+  {
+    "symbol": "AGHOL",
+    "name": "AG Anadolu Grubu Holding",
+    "sector": "Holding",
+    "cap": 49000000000,
+    "base": 310.0
+  },
+  {
+    "symbol": "MAVI",
+    "name": "Mavi Giyim",
+    "sector": "Perakende",
+    "cap": 47000000000,
+    "base": 115.0
+  },
+  {
+    "symbol": "KRDMD",
+    "name": "Kardemir D",
+    "sector": "Metal",
+    "cap": 45000000000,
+    "base": 29.0
+  },
+  {
+    "symbol": "TKFEN",
+    "name": "Tekfen Holding",
+    "sector": "Holding",
+    "cap": 43000000000,
+    "base": 72.0
+  },
+  {
+    "symbol": "TTRAK",
+    "name": "Türk Traktör",
+    "sector": "Otomotiv",
+    "cap": 42000000000,
+    "base": 720.0
+  },
+  {
+    "symbol": "AKSEN",
+    "name": "Aksa Enerji",
+    "sector": "Enerji",
+    "cap": 41000000000,
+    "base": 45.0
+  },
+  {
+    "symbol": "ZOREN",
+    "name": "Zorlu Enerji",
+    "sector": "Enerji",
+    "cap": 38000000000,
+    "base": 4.8
+  },
+  {
+    "symbol": "GESAN",
+    "name": "Girişim Elektrik",
+    "sector": "Elektrik Ekipmanları",
+    "cap": 37000000000,
+    "base": 52.0
+  },
+  {
+    "symbol": "BRYAT",
+    "name": "Borusan Yatırım",
+    "sector": "Holding",
+    "cap": 35000000000,
+    "base": 2100.0
+  },
+  {
+    "symbol": "KCAER",
+    "name": "Kocaer Çelik",
+    "sector": "Metal",
+    "cap": 33000000000,
+    "base": 46.0
+  },
+  {
+    "symbol": "TTKOM",
+    "name": "Türk Telekom",
+    "sector": "İletişim",
+    "cap": 32500000000,
+    "base": 59.0
+  },
+  {
+    "symbol": "TURSG",
+    "name": "Türkiye Sigorta",
+    "sector": "Sigorta",
+    "cap": 31000000000,
+    "base": 16.0
+  },
+  {
+    "symbol": "ANSGR",
+    "name": "Anadolu Sigorta",
+    "sector": "Sigorta",
+    "cap": 30500000000,
+    "base": 103.0
+  },
+  {
+    "symbol": "ANHYT",
+    "name": "Anadolu Hayat Emeklilik",
+    "sector": "Sigorta",
+    "cap": 29500000000,
+    "base": 88.0
+  },
+  {
+    "symbol": "ISMEN",
+    "name": "İş Yatırım",
+    "sector": "Aracı Kurum",
+    "cap": 29000000000,
+    "base": 41.0
+  },
+  {
+    "symbol": "MPARK",
+    "name": "MLP Sağlık",
+    "sector": "Sağlık",
+    "cap": 28000000000,
+    "base": 342.0
+  },
+  {
+    "symbol": "TRMET",
+    "name": "TR Anadolu Metal Madencilik",
+    "sector": "Madencilik",
+    "cap": 27500000000,
+    "base": 65.0
+  },
+  {
+    "symbol": "TRENJ",
+    "name": "TR Doğal Enerji",
+    "sector": "Madencilik",
+    "cap": 27000000000,
+    "base": 39.0
+  },
+  {
+    "symbol": "SELEC",
+    "name": "Selçuk Ecza Deposu",
+    "sector": "Sağlık",
+    "cap": 26500000000,
+    "base": 62.0
+  },
+  {
+    "symbol": "ECILC",
+    "name": "EİS Eczacıbaşı İlaç",
+    "sector": "Sağlık",
+    "cap": 26000000000,
+    "base": 54.0
+  },
+  {
+    "symbol": "ECZYT",
+    "name": "Eczacıbaşı Yatırım",
+    "sector": "Holding",
+    "cap": 25500000000,
+    "base": 262.0
+  },
+  {
+    "symbol": "GLYHO",
+    "name": "Global Yatırım Holding",
+    "sector": "Holding",
+    "cap": 25000000000,
+    "base": 18.0
+  },
+  {
+    "symbol": "LOGO",
+    "name": "Logo Yazılım",
+    "sector": "Teknoloji",
+    "cap": 24500000000,
+    "base": 118.0
+  },
+  {
+    "symbol": "PENTA",
+    "name": "Penta Teknoloji",
+    "sector": "Teknoloji",
+    "cap": 24000000000,
+    "base": 17.0
+  },
+  {
+    "symbol": "MIATK",
+    "name": "Mia Teknoloji",
+    "sector": "Teknoloji",
+    "cap": 23500000000,
+    "base": 48.0
+  },
+  {
+    "symbol": "ALFAS",
+    "name": "Alfa Solar Enerji",
+    "sector": "Enerji",
+    "cap": 23000000000,
+    "base": 66.0
+  },
+  {
+    "symbol": "CWENE",
+    "name": "CW Enerji",
+    "sector": "Enerji",
+    "cap": 22500000000,
+    "base": 248.0
+  },
+  {
+    "symbol": "SMRTG",
+    "name": "Smart Güneş Enerjisi",
+    "sector": "Enerji",
+    "cap": 22000000000,
+    "base": 41.0
+  },
+  {
+    "symbol": "EUPWR",
+    "name": "Europower Enerji",
+    "sector": "Elektrik Ekipmanları",
+    "cap": 21500000000,
+    "base": 33.0
+  },
+  {
+    "symbol": "CANTE",
+    "name": "Çan2 Termik",
+    "sector": "Enerji",
+    "cap": 21000000000,
+    "base": 14.0
+  },
+  {
+    "symbol": "ODAS",
+    "name": "Odaş Elektrik",
+    "sector": "Enerji",
+    "cap": 20500000000,
+    "base": 7.2
+  },
+  {
+    "symbol": "KLSER",
+    "name": "Kale Seramik",
+    "sector": "Sanayi",
+    "cap": 20000000000,
+    "base": 47.0
+  },
+  {
+    "symbol": "BOBET",
+    "name": "Boğaziçi Beton",
+    "sector": "İnşaat",
+    "cap": 19500000000,
+    "base": 28.0
+  },
+  {
+    "symbol": "CIMSA",
+    "name": "Çimsa",
+    "sector": "Çimento",
+    "cap": 19000000000,
+    "base": 41.0
+  },
+  {
+    "symbol": "AKCNS",
+    "name": "Akçansa",
+    "sector": "Çimento",
+    "cap": 18500000000,
+    "base": 210.0
+  },
+  {
+    "symbol": "BTCIM",
+    "name": "Batı Çimento",
+    "sector": "Çimento",
+    "cap": 18000000000,
+    "base": 21.0
+  },
+  {
+    "symbol": "BUCIM",
+    "name": "Bursa Çimento",
+    "sector": "Çimento",
+    "cap": 17500000000,
+    "base": 9.8
+  },
+  {
+    "symbol": "KORDS",
+    "name": "Kordsa Teknik Tekstil",
+    "sector": "Sanayi",
+    "cap": 17000000000,
+    "base": 73.0
+  },
+  {
+    "symbol": "PNSUT",
+    "name": "Pınar Süt",
+    "sector": "Gıda",
+    "cap": 16500000000,
+    "base": 31.0
+  },
+  {
+    "symbol": "TATEN",
+    "name": "Tatlıpınar Enerji",
+    "sector": "Enerji",
+    "cap": 16000000000,
+    "base": 39.0
+  },
+  {
+    "symbol": "KMPUR",
+    "name": "Kimteks Poliüretan",
+    "sector": "Kimya",
+    "cap": 15500000000,
+    "base": 56.0
+  },
+  {
+    "symbol": "KRVGD",
+    "name": "Kervan Gıda",
+    "sector": "Gıda",
+    "cap": 15000000000,
+    "base": 22.0
+  },
+  {
+    "symbol": "KLGYO",
+    "name": "Kiler GYO",
+    "sector": "Gayrimenkul",
+    "cap": 14500000000,
+    "base": 5.7
+  },
+  {
+    "symbol": "ISGYO",
+    "name": "İş GYO",
+    "sector": "Gayrimenkul",
+    "cap": 14000000000,
+    "base": 18.0
+  },
+  {
+    "symbol": "TRGYO",
+    "name": "Torunlar GYO",
+    "sector": "Gayrimenkul",
+    "cap": 13500000000,
+    "base": 46.0
+  },
+  {
+    "symbol": "VESTL",
+    "name": "Vestel",
+    "sector": "Dayanıklı Tüketim",
+    "cap": 13000000000,
+    "base": 72.0
+  },
+  {
+    "symbol": "VESBE",
+    "name": "Vestel Beyaz Eşya",
+    "sector": "Dayanıklı Tüketim",
+    "cap": 12500000000,
+    "base": 17.0
+  },
+  {
+    "symbol": "EGEEN",
+    "name": "Ege Endüstri",
+    "sector": "Otomotiv",
+    "cap": 12000000000,
+    "base": 10200.0
+  },
+  {
+    "symbol": "BRSAN",
+    "name": "Borusan Boru",
+    "sector": "Sanayi",
+    "cap": 11500000000,
+    "base": 380.0
+  },
+  {
+    "symbol": "TABGD",
+    "name": "TAB Gıda",
+    "sector": "Perakende",
+    "cap": 11000000000,
+    "base": 185.0
+  },
+  {
+    "symbol": "CVKMD",
+    "name": "CVK Maden",
+    "sector": "Madencilik",
+    "cap": 10500000000,
+    "base": 298.0
+  },
+  {
+    "symbol": "REEDR",
+    "name": "Reeder Teknoloji",
+    "sector": "Teknoloji",
+    "cap": 10000000000,
+    "base": 18.0
+  },
+  {
+    "symbol": "MOGAN",
+    "name": "Mogan Enerji",
+    "sector": "Enerji",
+    "cap": 9500000000,
+    "base": 11.0
+  },
+  {
+    "symbol": "OBAMS",
+    "name": "Oba Makarna",
+    "sector": "Gıda",
+    "cap": 9000000000,
+    "base": 38.0
+  },
+  {
+    "symbol": "KAYSE",
+    "name": "Kayseri Şeker",
+    "sector": "Gıda",
+    "cap": 8500000000,
+    "base": 23.0
+  },
+  {
+    "symbol": "DOHOL",
+    "name": "Doğan Holding",
+    "sector": "Holding",
+    "cap": 8000000000,
+    "base": 15.0
+  },
+  {
+    "symbol": "GOLTS",
+    "name": "Göltaş Çimento",
+    "sector": "Çimento",
+    "cap": 7500000000,
+    "base": 432.0
+  },
+  {
+    "symbol": "KONYA",
+    "name": "Konya Çimento",
+    "sector": "Çimento",
+    "cap": 7000000000,
+    "base": 6800.0
+  },
+  {
+    "symbol": "BIOEN",
+    "name": "Biotrend Enerji",
+    "sector": "Enerji",
+    "cap": 6500000000,
+    "base": 18.5
+  },
+  {
+    "symbol": "ASUZU",
+    "name": "Anadolu Isuzu",
+    "sector": "Otomotiv",
+    "cap": 6000000000,
+    "base": 76.0
+  }
+]
